@@ -100,7 +100,7 @@ export const translations = {
     pricing: '定价',
 
     // 页脚
-    footerDesc: '让创意自由流动的AI平台',
+    footerDesc: '让创意自由流动',
     footerFollow: '关注我们',
     footerRights: '版权所有',
   }

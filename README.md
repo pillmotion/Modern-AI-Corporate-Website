@@ -1,10 +1,8 @@
-# ITUSI - 现代AI企业网站
-
-![ITUSI Logo](/public/logo.png)
+# 药丸运动 - 让创意自由流动
 
 ## 项目概述
 
-ITUSI是一个现代化的AI企业展示网站，采用Next.js 15框架开发，结合了最新的Web技术和设计理念，为AI企业提供了一个专业、现代的在线展示平台。网站支持多语言切换、暗黑模式、响应式设计等现代网站必备功能，并集成了Google Analytics进行用户行为分析。
+药丸运动是一个面向视听创作者的一站式AI共创平台，从灵感迸发到作品成片，支持剧本、分镜、角色与场景的AI一键生成，并提供实时协作与版权存证，助力无边界创作。平台基于 Next.js 15 开发，具备多语言切换、暗黑模式与响应式设计等现代特性，并集成 Google Analytics 实现用户行为分析与优化。
 
 ## 主要功能
 
@@ -58,26 +56,18 @@ Modern AI Corporate Website/
 ### 前提条件
 
 - Node.js 18.0.0 或更高版本
-- npm 或 yarn 或 pnpm
+- npm
 
 ### 安装依赖
 
 ```bash
 npm install
-# 或
-yarn install
-# 或
-pnpm install
 ```
 
 ### 开发环境运行
 
 ```bash
 npm run dev
-# 或
-yarn dev
-# 或
-pnpm dev
 ```
 
 访问 http://localhost:3000 查看网站。
@@ -86,20 +76,12 @@ pnpm dev
 
 ```bash
 npm run build
-# 或
-yarn build
-# 或
-pnpm build
 ```
 
 ### 启动生产服务
 
 ```bash
 npm run start
-# 或
-yarn start
-# 或
-pnpm start
 ```
 
 ## Google Analytics配置
@@ -147,5 +129,4 @@ const GA_MEASUREMENT_ID = 'G-XXXXXXXXXX'; // 替换为您的实际GA4测量ID
 
 ## 联系方式
 
-- 邮箱：open@wtai.cc
-- GitHub：[ItusiAI](https://github.com/ItusiAI)
+- 邮箱：hhwjsw711@gmail.com
