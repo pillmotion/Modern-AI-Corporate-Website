@@ -29,7 +29,7 @@ export const translations = {
 
     // 产品部分
     ourProducts: 'Transparent Pricing',
-    bestValue: "Best Value",
+    mostPopular: "Most Popular",
     buyNow: "Buy Now",
     basicPlan: "Basic",
     proPlan: "Pro",
@@ -44,9 +44,21 @@ export const translations = {
     // 生成页面
     craftYourVideo: 'Craft your video',
     IHaveAScriptReady: 'I have a script ready',
+    IHaveAScriptReadyDesc: 'Upload your ready-made script and bring your story to life',
     letAIWriteYourStory: 'Let AI write your story',
+    letAIWriteYourStoryDesc: 'Give us an idea, and AI will generate a complete story for you',
     createStorySegmentBySegment: 'Create story segment by segment',
+    createStorySegmentBySegmentDesc: 'Collaborate with AI to build your story segment by segment, creating as you go',
     BulkGenerateYTShorts: 'Bulk Generate Youtube Shorts',
+    BulkGenerateYTShortsDesc: 'Generate multiple high-quality YouTube Shorts in one click and boost your content production with ease',
+
+    // 引导页面
+    guidedStoryCreation: 'Guided Story Creation',
+    EnterAPrompt: 'Enter a Prompt',
+    inputPlaceholder: "Generate a 130-word max video script that is five short paragraphs. It should include a catchy hook or intro, a clear main learning point, and actionable advice for the viewer to try. The topic of the script should match a title called: Mastering Social Media Algorithms: Your Key to Success",
+    error: "Error",
+    characters: "characters",
+    generateGuidedStoryButton: "Generate Guided Story (1 credit)",
 
     // 导航
     home: 'Home',
@@ -91,7 +103,7 @@ export const translations = {
 
     // 产品部分
     ourProducts: '透明定价',
-    bestValue: "最受欢迎",
+    mostPopular: "最受欢迎",
     buyNow: "立即购买",
     basicPlan: "基础版",
     proPlan: "专业版",
@@ -106,10 +118,21 @@ export const translations = {
     // 生成页面
     craftYourVideo: '制作您的视频',
     IHaveAScriptReady: '我已经准备好剧本了',
+    IHaveAScriptReadyDesc: '上传你已准备好的剧本，为你呈现精彩故事',
     letAIWriteYourStory: '让人工智能书写你的故事',
+    letAIWriteYourStoryDesc: '只需一个想法，AI就能为你生成完整故事',
     createStorySegmentBySegment: '逐段创建故事',
+    createStorySegmentBySegmentDesc: '与AI一起逐段构建你的专属故事，边写边创作',
     BulkGenerateYTShorts: '批量生成Youtube短视频',
+    BulkGenerateYTShortsDesc: '一键生成多个高质量短视频，轻松提升你的内容产出效率',
 
+    // 引导页面
+    guidedStoryCreation: '引导故事创作',
+    EnterAPrompt: '输入提示词',
+    inputPlaceholder: "制作一个最多130字的视频脚本，包含五个简短的段落。它应该包含一个引人入胜的引言或介绍、一个清晰的主要学习点，以及可供观看者尝试的可行建议。脚本的主题应该与标题“掌握社交媒体算法：你的成功秘诀”相符",
+    error: "错误",
+    characters: "字符",
+    generateGuidedStoryButton: "生成引导故事（1个积分）",
 
     // 导航
     home: '首页',

@@ -1,12 +1,37 @@
 "use client";
 
-import { Globe, Code, Newspaper, Mic2, Navigation, Briefcase } from 'lucide-react';
+import { List, Pencil, Wand2 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useTranslation } from '@/hooks/useTranslation';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 
 export default function Generate() {
     const { t } = useTranslation();
+
+    const services = [
+        {
+            icon: Pencil,
+            title: t('IHaveAScriptReady'),
+            description: t('IHaveAScriptReadyDesc'),
+            href: '/generate/script',
+            popular: false
+        },
+        {
+            icon: Wand2,
+            title: t('letAIWriteYourStory'),
+            description: t('letAIWriteYourStoryDesc'),
+            href: '/generate/guided',
+            popular: true // 标记为 popular
+        },
+        {
+            icon: List,
+            title: t('createStorySegmentBySegment'),
+            description: t('createStorySegmentBySegmentDesc'),
+            href: '/generate/segment',
+            popular: false
+        },
+    ];
 
     return (
         <div className="min-h-screen">
@@ -19,60 +44,26 @@ export default function Generate() {
                     </CardHeader>
                     <CardContent className="pt-4 md:pt-6">
                         <div className="space-y-4 md:space-y-8">
-                            <div className="container">
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.5 }}
-                                    viewport={{ once: true }}
-                                >
-                                    <h2 className="text-3xl font-bold text-center mb-12">
-                                        <span className="text-primary">
-                                            {t('ourServices')}
-                                        </span>
-                                    </h2>
-                                </motion.div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {[
-                                        {
-                                            icon: Newspaper,
-                                            title: t('aiNewsTitle'),
-                                            description: t('aiNewsDesc')
-                                        },
-                                        {
-                                            icon: Briefcase,
-                                            title: t('aiResearchTitle'),
-                                            description: t('aiResearchDesc')
-                                        },
-                                        {
-                                            icon: Code,
-                                            title: t('aiProgrammingTitle'),
-                                            description: t('aiProgrammingDesc')
-                                        },
-                                        {
-                                            icon: Navigation,
-                                            title: t('aiNavigatorTitle'),
-                                            description: t('aiNavigatorDesc')
-                                        },
-                                        {
-                                            icon: Globe,
-                                            title: t('aiTranslationTitle'),
-                                            description: t('aiTranslationDesc')
-                                        },
-                                        {
-                                            icon: Mic2,
-                                            title: t('aiVoiceTitle'),
-                                            description: t('aiVoiceDesc')
-                                        }
-                                    ].map((service, index) => (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {services.map((service, index) => (
+                                    <Link key={index} href={service.href} passHref>
                                         <motion.div
-                                            key={index}
                                             initial={{ opacity: 0, y: 20 }}
                                             whileInView={{ opacity: 1, y: 0 }}
                                             transition={{ duration: 0.5, delay: index * 0.1 }}
                                             viewport={{ once: true }}
+                                            className="h-full"
                                         >
-                                            <Card className="group hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/5 bg-gradient-to-br from-background to-primary/5 h-full flex flex-col">
+                                            {/* 添加 relative 类 */}
+                                            <Card className={`relative group hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/5 bg-gradient-to-br from-background to-primary/5 h-full flex flex-col cursor-pointer ${service.popular ? 'border-primary shadow-lg' : ''}`}>
+                                                {/* 条件渲染 "Most Popular" 标签 */}
+                                                {service.popular && (
+                                                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                                                        <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-medium shadow-md">
+                                                            {t('mostPopular')}
+                                                        </span>
+                                                    </div>
+                                                )}
                                                 <CardHeader>
                                                     <div className="relative w-12 h-12 mb-4">
                                                         <motion.div
@@ -99,8 +90,8 @@ export default function Generate() {
                                                 </CardContent>
                                             </Card>
                                         </motion.div>
-                                    ))}
-                                </div>
+                                    </Link>
+                                ))}
                             </div>
                         </div>
                     </CardContent>
