@@ -11,13 +11,13 @@ export default function Logo() {
       <div className="relative h-8 w-8">
         <Image 
           src="/logo.png" 
-          alt="ITUSI Logo" 
+          alt="Pillmotion Logo" 
           fill
           className="object-contain"
           sizes="32px"
         />
       </div>
-      <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+      <span className="text-xl font-bold text-primary">
         {t('companyName')}
       </span>
     </div>

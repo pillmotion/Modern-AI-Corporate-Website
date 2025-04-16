@@ -2,86 +2,34 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Brain, Globe, Code, Newspaper, Mic2, Navigation, Briefcase } from 'lucide-react';
-import Image from 'next/image';
+import { Globe, Code, Newspaper, Mic2, Navigation, Briefcase } from 'lucide-react';
 import { motion } from 'framer-motion';
-import Typewriter from 'typewriter-effect';
 import { useLanguage } from '@/components/language-provider';
 import { useTranslation } from '@/hooks/useTranslation';
 import { TranslationKey } from '@/lib/translations';
 
-const floatingAnimation = {
-  y: ['-10%', '10%'],
-  transition: {
-    duration: 2,
-    repeat: Infinity,
-    repeatType: 'reverse' as const,
-    ease: 'easeInOut',
-  },
-};
-
-const pulseAnimation = {
-  scale: [1, 1.1, 1],
-  opacity: [0.3, 0.6, 0.3],
-  transition: {
-    duration: 4,
-    repeat: Infinity,
-    ease: 'easeInOut',
-  },
-};
-
-const rotateAnimation = {
-  rotate: [0, 360],
-  transition: {
-    duration: 20,
-    repeat: Infinity,
-    ease: 'linear',
-  },
-};
-
-const products = [
+const payAsYouGo = [
   {
-    titleKey: 'product1Title' as TranslationKey,
-    descriptionKey: 'product1Desc' as TranslationKey,
-    image: "/images/wotushe.png",
-    link: "https://www.52wts.cn"
+    type: "basicPlan" as TranslationKey,
+    price: "$6",
+    popular: false
   },
   {
-    titleKey: 'product2Title' as TranslationKey,
-    descriptionKey: 'product2Desc' as TranslationKey,
-    image: "/images/wtaigc.png",
-    link: "https://www.wtaigc.com"
+    type: "proPlan" as TranslationKey,
+    price: "$55",
+    popular: true
   },
   {
-    titleKey: 'product3Title' as TranslationKey,
-    descriptionKey: 'product3Desc' as TranslationKey,
-    image: "/images/wtai.png",
-    link: "https://wtai.cc"
-  },
-  {
-    titleKey: 'product4Title' as TranslationKey,
-    descriptionKey: 'product4Desc' as TranslationKey,
-    image: "/images/wtsea.png",
-    link: "https://wtsea.cn"
-  },
-  {
-    titleKey: 'product5Title' as TranslationKey,
-    descriptionKey: 'product5Desc' as TranslationKey,
-    image: "/images/aitranslation.png",
-    link: "https://aitranslate.site"
-  },
-  {
-    titleKey: 'product6Title' as TranslationKey,
-    descriptionKey: 'product6Desc' as TranslationKey,
-    image: "/images/voicecanvas.png",
-    link: "https://voicecanvas.org"
+    type: "maxPlan" as TranslationKey,
+    price: "$150",
+    popular: false
   }
 ];
 
 export default function Home() {
   const { language } = useLanguage();
   const { t } = useTranslation();
-  
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
@@ -94,16 +42,8 @@ export default function Home() {
               transition={{ duration: 0.8 }}
               className="mb-8"
             >
-              <h1 className="text-4xl md:text-6xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent min-h-[96px] md:min-h-[120px] flex items-center justify-center">
-                <Typewriter
-                  options={{
-                    strings: [t('heroTitle1'), t('heroTitle2'), t('heroTitle3')],
-                    autoStart: true,
-                    loop: true,
-                    deleteSpeed: 50,
-                    delay: 80,
-                  }}
-                />
+              <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-primary min-h-[96px] md:min-h-[120px] flex items-center justify-center">
+                {t('heroTitle')}
               </h1>
             </motion.div>
             <motion.p
@@ -129,114 +69,6 @@ export default function Home() {
             </motion.div>
           </div>
         </div>
-        
-        {/* Animated background elements */}
-        <div className="absolute inset-0 overflow-hidden">
-          {/* Floating blobs */}
-          <motion.div
-            className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary/20 rounded-full blur-3xl"
-            animate={floatingAnimation}
-          />
-          <motion.div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary/15 rounded-full blur-3xl"
-            animate={floatingAnimation}
-          />
-          <motion.div
-            className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-primary/10 rounded-full blur-3xl"
-            animate={floatingAnimation}
-          />
-
-          {/* Centered rotating geometric shapes */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-            <motion.div
-              className="absolute -top-16 -left-16 w-32 h-32 border-2 border-primary/20 rounded-lg"
-              animate={rotateAnimation}
-            />
-            <motion.div
-              className="absolute -bottom-16 -right-16 w-32 h-32 border-2 border-primary/20 rotate-45"
-              animate={{
-                rotate: [0, 360],
-                transition: { 
-                  duration: 20,
-                  repeat: Infinity,
-                  ease: 'linear',
-                  delay: 0.5 
-                },
-              }}
-            />
-            <motion.div
-              className="absolute -bottom-16 -left-16 w-24 h-24 border-2 border-primary/20"
-              animate={{
-                rotate: [0, 360],
-                transition: { 
-                  duration: 20,
-                  repeat: Infinity,
-                  ease: 'linear',
-                  delay: 1 
-                },
-              }}
-            />
-            <motion.div
-              className="absolute -top-16 -right-16 w-24 h-24 border-2 border-primary/20 rounded-full"
-              animate={{
-                rotate: [0, 360],
-                transition: { 
-                  duration: 20,
-                  repeat: Infinity,
-                  ease: 'linear',
-                  delay: 1.5 
-                },
-              }}
-            />
-          </div>
-
-          {/* Centered floating particles */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-            <motion.div
-              className="absolute -top-24 -left-24 w-3 h-3 bg-primary/40 rounded-full"
-              animate={floatingAnimation}
-            />
-            <motion.div
-              className="absolute -bottom-24 -right-24 w-2 h-2 bg-primary/40 rounded-full"
-              animate={{
-                y: ['-10%', '10%'],
-                transition: { 
-                  duration: 2,
-                  repeat: Infinity,
-                  repeatType: 'reverse' as const,
-                  ease: 'easeInOut',
-                  delay: 0.5 
-                },
-              }}
-            />
-            <motion.div
-              className="absolute -bottom-24 -left-24 w-2 h-2 bg-primary/40 rounded-full"
-              animate={{
-                y: ['-10%', '10%'],
-                transition: { 
-                  duration: 2,
-                  repeat: Infinity,
-                  repeatType: 'reverse' as const,
-                  ease: 'easeInOut',
-                  delay: 1 
-                },
-              }}
-            />
-            <motion.div
-              className="absolute -top-24 -right-24 w-3 h-3 bg-primary/40 rounded-full"
-              animate={{
-                y: ['-10%', '10%'],
-                transition: { 
-                  duration: 2,
-                  repeat: Infinity,
-                  repeatType: 'reverse' as const,
-                  ease: 'easeInOut',
-                  delay: 1.5 
-                },
-              }}
-            />
-          </div>
-        </div>
 
         {/* Grid pattern with gradient overlay */}
         <div className="absolute inset-0">
@@ -246,7 +78,7 @@ export default function Home() {
       </section>
 
       {/* Services Section */}
-      <section id="services" className="py-20">
+      <section id="features" className="py-20">
         <div className="container">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -255,7 +87,7 @@ export default function Home() {
             viewport={{ once: true }}
           >
             <h2 className="text-3xl font-bold text-center mb-12">
-              <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              <span className="text-primary">
                 {t('ourServices')}
               </span>
             </h2>
@@ -333,7 +165,7 @@ export default function Home() {
       </section>
 
       {/* Products Section */}
-      <section id="products" className="py-20 bg-muted/50">
+      <section id="pricing" className="py-20">
         <div className="container">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -342,126 +174,74 @@ export default function Home() {
             viewport={{ once: true }}
           >
             <h2 className="text-3xl font-bold text-center mb-12">
-              <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              <span className="text-primary">
                 {t('ourProducts')}
               </span>
             </h2>
           </motion.div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {products.map((product, index) => (
+            {payAsYouGo.map((plan, index) => (
               <motion.div
-                key={index}
+                key={plan.type}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 viewport={{ once: true }}
               >
-                <Card className="overflow-hidden group hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/5 h-full flex flex-col">
-                  <a href={product.link} target="_blank" rel="noopener noreferrer" className="flex flex-col h-full">
-                    <div className="relative h-48 overflow-hidden">
-                      <Image
-                        src={product.image}
-                        alt={product.titleKey}
-                        fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        className="object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
+                <Card className={`group p-6 relative ${plan.popular ? 'border-primary shadow-lg' : ''}`}>
+                  {plan.popular && (
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                      <span className="bg-primary text-white px-3 py-1 rounded-full text-sm">
+                        {t('bestValue')}
+                      </span>
                     </div>
-                    <CardHeader>
-                      <CardTitle className="group-hover:text-primary transition-colors">
-                        {t(product.titleKey)}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex-grow">
-                      <p className="text-muted-foreground group-hover:text-foreground/80 transition-colors">
-                        {t(product.descriptionKey)}
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-[hsl(var(--primary-end))]/10 rounded-lg" />
+                  <div className="relative text-center flex flex-col h-full">
+                    {/* 顶部内容 */}
+                    <div className="flex-grow">
+                      <h3 className="text-2xl font-bold mb-2 text-primary">{t(plan.type)}</h3>
+
+                      <p className="text-muted-foreground mb-4">
+                        {plan.type === "basicPlan" && t('basicPlanCredits')}
+                        {plan.type === "proPlan" && t('proPlanCredits')}
+                        {plan.type === "maxPlan" && t('maxPlanCredits')}
                       </p>
-                    </CardContent>
-                  </a>
+
+                      <div className="mb-2">
+                        <span className="text-4xl font-bold text-muted-foreground group-hover:text-primary transition-colors">
+                          {plan.type === "basicPlan" && "$9"}
+                          {plan.type === "proPlan" && "$19"}
+                          {plan.type === "maxPlan" && "$29"}
+                        </span>
+                        <span className="text-muted-foreground ml-1">{t('perMonth')}</span>
+                      </div>
+
+                      {/* 统一高度的内容盒子 */}
+                      <div className="h-10"> {/* 固定高度 */}
+                        {plan.type === "proPlan" && (
+                          <p className="text-primary font-medium">{t('proMoreCredits')}</p>
+                        )}
+                        {plan.type === "maxPlan" && (
+                          <p className="text-primary font-medium">{t('maxMoreCredits')}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 底部按钮 */}
+                    <Button
+                      size="lg"
+                      className={plan.popular
+                        ? "bg-primary hover:bg-primary/90 w-full mt-4"
+                        : "border-primary text-primary hover:bg-primary/10 w-full mt-4"}
+                      variant={plan.popular ? "default" : "outline"}
+                    >
+                      {t('buyNow')}
+                    </Button>
+                  </div>
                 </Card>
               </motion.div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Company Introduction Section */}
-      <section id="about" className="py-20 bg-gradient-to-b from-background to-primary/5">
-        <div className="container">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-3xl font-bold text-center mb-12">
-              <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                {t('aboutUs')}
-              </span>
-            </h2>
-          </motion.div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true }}
-              className="relative"
-            >
-              <div className="relative aspect-video overflow-hidden rounded-xl">
-                <Image
-                  src="/images/about-us.jpg"
-                  alt="AI Innovation and Education"
-                  fill
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  className="object-cover"
-                />
-              </div>
-              <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-primary/10 rounded-full blur-2xl" />
-              <div className="absolute -top-6 -left-6 w-32 h-32 bg-primary/10 rounded-full blur-2xl" />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true }}
-              className="space-y-6"
-            >
-              <div className="space-y-4">
-                <h3 className="text-2xl font-semibold text-primary">{t('ourVision')}</h3>
-                <p className="text-muted-foreground">
-                  {t('visionDesc')}
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-2xl font-semibold text-primary">{t('ourMission')}</h3>
-                <p className="text-muted-foreground">
-                  {t('missionDesc')}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-6 pt-6">
-                <Card className="bg-primary/5 border-primary/10">
-                  <CardHeader>
-                    <CardTitle className="text-4xl font-bold text-primary">3+</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">{t('yearsOfInnovation')}</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-primary/5 border-primary/10">
-                  <CardHeader>
-                    <CardTitle className="text-4xl font-bold text-primary">100K+</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">{t('globalUsers')}</p>
-                  </CardContent>
-                </Card>
-              </div>
-            </motion.div>
           </div>
         </div>
       </section>

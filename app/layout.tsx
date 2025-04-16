@@ -9,7 +9,7 @@ import GoogleAnalytics from '@/components/google-analytics';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'ITUSI - Leading AI Innovation and Development',
+  title: 'Pillmotion - Leading AI Innovation and Development',
   description: 'Transform your business with cutting-edge AI solutions. Join us in shaping the future of technology.',
   icons: {
     icon: [
@@ -19,13 +19,13 @@ export const metadata: Metadata = {
     apple: '/logo.png',
   },
   openGraph: {
-    title: 'ITUSI - Leading AI Innovation and Development',
+    title: 'Pillmotion - Leading AI Innovation and Development',
     description: 'Transform your business with cutting-edge AI solutions. Join us in shaping the future of technology.',
     images: ['/images/og-image.png'],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ITUSI - Leading AI Innovation and Development',
+    title: 'Pillmotion - Leading AI Innovation and Development',
     description: 'Transform your business with cutting-edge AI solutions. Join us in shaping the future of technology.',
     images: ['images/og-image.png'],
   },

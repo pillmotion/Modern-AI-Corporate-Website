@@ -32,14 +32,11 @@ export default function Header() {
           <a href="/" className="text-foreground/60 hover:text-primary transition-colors">
             {t('home')}
           </a>
-          <a href="#services" className="text-foreground/60 hover:text-primary transition-colors">
-            {t('services')}
+          <a href="#features" className="text-foreground/60 hover:text-primary transition-colors">
+            {t('features')}
           </a>
-          <a href="#products" className="text-foreground/60 hover:text-primary transition-colors">
-            {t('products')}
-          </a>
-          <a href="#about" className="text-foreground/60 hover:text-primary transition-colors">
-            {t('about')}
+          <a href="#pricing" className="text-foreground/60 hover:text-primary transition-colors">
+            {t('pricing')}
           </a>
         </nav>
 
@@ -82,14 +79,11 @@ export default function Header() {
                 <a href="/" className="text-foreground/60 hover:text-primary transition-colors">
                   {t('home')}
                 </a>
-                <a href="#services" className="text-foreground/60 hover:text-primary transition-colors">
-                  {t('services')}
+                <a href="#features" className="text-foreground/60 hover:text-primary transition-colors">
+                  {t('features')}
                 </a>
-                <a href="#products" className="text-foreground/60 hover:text-primary transition-colors">
-                  {t('products')}
-                </a>
-                <a href="#about" className="text-foreground/60 hover:text-primary transition-colors">
-                  {t('about')}
+                <a href="#pricing" className="text-foreground/60 hover:text-primary transition-colors">
+                  {t('pricing')}
                 </a>
               </div>
             </SheetContent>

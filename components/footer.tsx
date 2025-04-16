@@ -27,10 +27,10 @@ export default function Footer() {
           <div>
             <h4 className="font-medium mb-4 text-left md:text-right">{t('footerFollow')}</h4>
             <div className="flex space-x-4 justify-start md:justify-end">
-              <a href="https://x.com/itusi2024" className="p-2 rounded-full hover:bg-muted transition-colors" target="_blank" rel="noopener noreferrer">
+              <a href="https://x.com/hhwjsw711" className="p-2 rounded-full hover:bg-muted transition-colors" target="_blank" rel="noopener noreferrer">
                 <FaTwitter size={20} />
               </a>
-              <a href="https://github.com/ItusiAI" className="p-2 rounded-full hover:bg-muted transition-colors" target="_blank" rel="noopener noreferrer">
+              <a href="https://github.com/hhwjsw711" className="p-2 rounded-full hover:bg-muted transition-colors" target="_blank" rel="noopener noreferrer">
                 <FaGithub size={20} />
               </a>
               <Popover>
