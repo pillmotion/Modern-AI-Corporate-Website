@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useTheme } from 'next-themes';
 import { useLanguage } from './language-provider';
 import { Button } from '@/components/ui/button';
-import { Moon, Sun, Globe, Menu, X } from 'lucide-react';
+import { Moon, Sun, Globe, Menu, ArrowLeft } from 'lucide-react';
 import Logo from './logo';
 import {
   DropdownMenu,
@@ -14,17 +14,29 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useTranslation } from '@/hooks/useTranslation';
+import { SignInButton, UserButton } from "@clerk/clerk-react";
+import { Authenticated, Unauthenticated } from "convex/react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const { language, setLanguage } = useLanguage();
   const { t } = useTranslation();
+  const pathname = usePathname();
+  const showBackButton = pathname !== '/';
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4 md:gap-8">
+          {showBackButton && (
+            <Link href="/" className="hidden md:flex items-center text-sm">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {t('back')}
+            </Link>
+          )}
           <Logo />
         </div>
 
@@ -37,6 +49,9 @@ export default function Header() {
           </a>
           <a href="#pricing" className="text-foreground/60 hover:text-primary transition-colors">
             {t('pricing')}
+          </a>
+          <a href="/generate" className="text-foreground/60 hover:text-primary transition-colors">
+            {t('generate')}
           </a>
         </nav>
 
@@ -66,6 +81,19 @@ export default function Header() {
             <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
             <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
           </Button>
+
+          <div className="h-6 w-[1px] bg-border hidden md:block" />
+
+          <Unauthenticated>
+            <SignInButton mode="modal">
+              <Button variant="ghost" className="hover:text-primary">
+                {t('login')}
+              </Button>
+            </SignInButton>
+          </Unauthenticated>
+          <Authenticated>
+            <UserButton />
+          </Authenticated>
 
           {/* Mobile Menu */}
           <Sheet>

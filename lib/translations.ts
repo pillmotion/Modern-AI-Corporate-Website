@@ -41,10 +41,20 @@ export const translations = {
     proMoreCredits: "33% more credits",
     maxMoreCredits: "67% more credits",
 
+    // 生成页面
+    craftYourVideo: 'Craft your video',
+    IHaveAScriptReady: 'I have a script ready',
+    letAIWriteYourStory: 'Let AI write your story',
+    createStorySegmentBySegment: 'Create story segment by segment',
+    BulkGenerateYTShorts: 'Bulk Generate Youtube Shorts',
+
     // 导航
     home: 'Home',
     features: 'Features',
     pricing: 'Pricing',
+    login: 'Login',
+    generate: 'Generate',
+    back: 'Back',
 
     // 页脚
     footerDesc: 'AI platform for boundless creativity',
@@ -93,11 +103,21 @@ export const translations = {
     proMoreCredits: "多33%积分",
     maxMoreCredits: "多67%积分",
 
+    // 生成页面
+    craftYourVideo: '制作您的视频',
+    IHaveAScriptReady: '我已经准备好剧本了',
+    letAIWriteYourStory: '让人工智能书写你的故事',
+    createStorySegmentBySegment: '逐段创建故事',
+    BulkGenerateYTShorts: '批量生成Youtube短视频',
+
 
     // 导航
     home: '首页',
     features: '功能',
     pricing: '定价',
+    login: '登录',
+    generate: '生成',
+    back: '返回',
 
     // 页脚
     footerDesc: '让创意自由流动',

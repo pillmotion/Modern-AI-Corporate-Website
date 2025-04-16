@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { LanguageProvider } from '@/components/language-provider';
 import ClientLayout from '@/components/client-layout';
 import GoogleAnalytics from '@/components/google-analytics';
+import { ProvidersLayout } from '@/components/providers-layout';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -52,9 +53,11 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <LanguageProvider>
-            <ClientLayout>{children}</ClientLayout>
-          </LanguageProvider>
+          <ProvidersLayout>
+            <LanguageProvider>
+              <ClientLayout>{children}</ClientLayout>
+            </LanguageProvider>
+          </ProvidersLayout>
         </ThemeProvider>
       </body>
     </html>
