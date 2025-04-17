@@ -4,31 +4,63 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Globe, Code, Newspaper, Mic2, Navigation, Briefcase } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useLanguage } from '@/components/language-provider';
 import { useTranslation } from '@/hooks/useTranslation';
 import { TranslationKey } from '@/lib/translations';
+import { SignInButton, useUser } from "@clerk/clerk-react";
+import { useToast } from "@/hooks/use-toast";
+import { useAction } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 const payAsYouGo = [
   {
-    type: "basicPlan" as TranslationKey,
+    type: "thousandCredits" as TranslationKey,
     price: "$6",
     popular: false
   },
   {
-    type: "proPlan" as TranslationKey,
+    type: "tenThousandCredits" as TranslationKey,
     price: "$55",
     popular: true
   },
   {
-    type: "maxPlan" as TranslationKey,
+    type: "thirtyThousandCredits" as TranslationKey,
     price: "$150",
     popular: false
   }
 ];
 
 export default function Home() {
-  const { language } = useLanguage();
   const { t } = useTranslation();
+  const { isLoaded: isUserLoaded, isSignedIn } = useUser();
+  const { toast } = useToast();
+  // Get the Convex action
+  const createCheckout = useAction(api.stripe.createCheckoutSession); // <-- Use the correct action name
+
+  const handlePlanClick = async (type: string) => {
+    // Button rendering logic already ensures user is loaded and signed in
+
+    try {
+      toast({ title: t('creatingPaymentLink') });
+
+      // Call the Convex action to get the Stripe Checkout URL
+      const sessionUrl = await createCheckout({ planType: type });
+
+      if (!sessionUrl) {
+        throw new Error(t('getPaymentLinkFailed'));
+      }
+
+      // Redirect the user to the Stripe Checkout page
+      window.location.href = sessionUrl; // <-- Navigate directly
+
+    } catch (error: unknown) {
+      const description = error instanceof Error ? error.message : t('unknownError');
+      toast({
+        title: t('error'),
+        description: description,
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -167,81 +199,61 @@ export default function Home() {
       {/* Products Section */}
       <section id="pricing" className="py-20">
         <div className="container">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-3xl font-bold text-center mb-12">
-              <span className="text-primary">
-                {t('ourProducts')}
-              </span>
-            </h2>
-          </motion.div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {payAsYouGo.map((plan, index) => (
-              <motion.div
-                key={plan.type}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                viewport={{ once: true }}
-              >
-                <Card className={`group p-6 relative ${plan.popular ? 'border-primary shadow-lg' : ''}`}>
-                  {plan.popular && (
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                      <span className="bg-primary text-white px-3 py-1 rounded-full text-sm">
-                        {t('mostPopular')}
-                      </span>
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-[hsl(var(--primary-end))]/10 rounded-lg" />
-                  <div className="relative text-center flex flex-col h-full">
-                    {/* 顶部内容 */}
-                    <div className="flex-grow">
-                      <h3 className="text-2xl font-bold mb-2 text-primary">{t(plan.type)}</h3>
-
-                      <p className="text-muted-foreground mb-4">
-                        {plan.type === "basicPlan" && t('basicPlanCredits')}
-                        {plan.type === "proPlan" && t('proPlanCredits')}
-                        {plan.type === "maxPlan" && t('maxPlanCredits')}
-                      </p>
-
-                      <div className="mb-2">
-                        <span className="text-4xl font-bold text-muted-foreground group-hover:text-primary transition-colors">
-                          {plan.type === "basicPlan" && "$9"}
-                          {plan.type === "proPlan" && "$19"}
-                          {plan.type === "maxPlan" && "$29"}
+          <div className="mt-16">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              viewport={{ once: true }}
+            >
+              <h2 className="text-3xl font-bold text-center mb-8 bg-clip-text text-transparent bg-primary">{t('payAsYouGo')}</h2>
+            </motion.div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {payAsYouGo.map((plan, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                >
+                  <Card key={plan.type} className={`p-6 relative ${plan.popular ? 'border-primary shadow-lg' : ''}`}>
+                    {plan.popular && (
+                      <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                        <span className="bg-primary text-white px-3 py-1 rounded-full text-sm">
+                          {t('bestValue')}
                         </span>
-                        <span className="text-muted-foreground ml-1">{t('perMonth')}</span>
                       </div>
-
-                      {/* 统一高度的内容盒子 */}
-                      <div className="h-10"> {/* 固定高度 */}
-                        {plan.type === "proPlan" && (
-                          <p className="text-primary font-medium">{t('proMoreCredits')}</p>
-                        )}
-                        {plan.type === "maxPlan" && (
-                          <p className="text-primary font-medium">{t('maxMoreCredits')}</p>
-                        )}
+                    )}
+                    <div className="absolute inset-0 rounded-lg" />
+                    <div className="relative text-center">
+                      <h3 className="text-2xl font-bold mb-4 bg-clip-text text-transparent bg-primary/90">{t(plan.type)}</h3>
+                      <div className="mb-6">
+                        <span className="text-4xl font-bold bg-clip-text text-transparent bg-primary/90">{plan.price}</span>
                       </div>
+                      {(isUserLoaded && isSignedIn) ? (
+                        <Button
+                          className="w-full bg-primary text-white"
+                          variant={plan.popular ? "default" : "outline"}
+                          onClick={() => handlePlanClick(plan.type)} // 直接调用 handlePlanClick
+                        >
+                          {t('buyNow')}
+                        </Button>
+                      ) : (
+                        <SignInButton mode="modal">
+                          <Button
+                            className="w-full bg-primary text-white"
+                            variant={plan.popular ? "default" : "outline"}
+                          >
+                            {t('loginToBuy')}
+                          </Button>
+                        </SignInButton>
+                      )}
                     </div>
-
-                    {/* 底部按钮 */}
-                    <Button
-                      size="lg"
-                      className={plan.popular
-                        ? "bg-primary hover:bg-primary/90 w-full mt-4"
-                        : "border-primary text-primary hover:bg-primary/10 w-full mt-4"}
-                      variant={plan.popular ? "default" : "outline"}
-                    >
-                      {t('buyNow')}
-                    </Button>
-                  </div>
-                </Card>
-              </motion.div>
-            ))}
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
       </section>

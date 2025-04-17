@@ -121,10 +121,6 @@ export default function Header() {
                   </a>
                   {/* === End of replacement === */}
 
-
-                  {/* Optional: Add "Buy Credits" button */}
-                  {/* <Button size="sm">购买积分</Button> */}
-
                   <UserButton afterSignOutUrl="/" />
                 </>
               ) : (

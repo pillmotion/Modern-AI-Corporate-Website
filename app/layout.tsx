@@ -6,6 +6,7 @@ import { LanguageProvider } from '@/components/language-provider';
 import ClientLayout from '@/components/client-layout';
 import GoogleAnalytics from '@/components/google-analytics';
 import { ProvidersLayout } from '@/components/providers-layout';
+import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -56,6 +57,7 @@ export default function RootLayout({
           <ProvidersLayout>
             <LanguageProvider>
               <ClientLayout>{children}</ClientLayout>
+              <Toaster />
             </LanguageProvider>
           </ProvidersLayout>
         </ThemeProvider>

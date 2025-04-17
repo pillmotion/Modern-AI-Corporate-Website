@@ -3,6 +3,17 @@ import { internalMutation, query } from "./_generated/server";
 
 const FREE_CREDITS = 5;
 
+const calculateCredits = (planType: string): number => {
+    switch (planType) {
+        case "thousandCredits": return 1000;
+        case "tenThousandCredits": return 10000;
+        case "thirtyThousandCredits": return 30000;
+        default:
+            console.warn(`Unknown plan type encountered: ${planType}`);
+            return 0; // Return 0 for unknown plans to avoid errors
+    }
+};
+
 export const createUser = internalMutation({
     args: {
         email: v.string(),
@@ -78,5 +89,39 @@ export const getCurrentUserCredits = query({
             credits: user.credits,
             // name: user.name // Optionally return other fields
         };
+    },
+});
+
+export const addCredits = internalMutation({
+    args: {
+        clerkUserId: v.string(), // <-- CORRECTED: Should be v.string()
+        planType: v.string(),
+    },
+    handler: async (ctx, args) => {
+        // Now args.clerkUserId is correctly typed as a string for the query
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_userId", (q) => q.eq("userId", args.clerkUserId))
+            .unique();
+
+        if (!user) {
+            console.error(`[addCredits] User not found with Clerk ID: ${args.clerkUserId}. Cannot add credits.`);
+            return;
+        }
+
+        const amountToAdd = calculateCredits(args.planType);
+
+        if (amountToAdd <= 0) {
+            console.error(`[addCredits] Invalid plan type or zero credits calculated for plan '${args.planType}' for user with Clerk ID ${args.clerkUserId}.`);
+            return;
+        }
+
+        const currentCredits = user.credits ?? 0;
+
+        await ctx.db.patch(user._id, {
+            credits: currentCredits + amountToAdd,
+        });
+
+        console.log(`[addCredits] Successfully added ${amountToAdd} credits to user with Clerk ID ${args.clerkUserId} (Convex ID: ${user._id}). New balance: ${currentCredits + amountToAdd}`);
     },
 });
