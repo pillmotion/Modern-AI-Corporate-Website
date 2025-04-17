@@ -14,10 +14,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useTranslation } from '@/hooks/useTranslation';
-import { SignInButton, UserButton } from "@clerk/clerk-react";
-import { Authenticated, Unauthenticated } from "convex/react";
+import { SignInButton, UserButton, useUser } from "@clerk/clerk-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { api } from '@/convex/_generated/api';
+import { useQuery } from "convex/react";
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,6 +27,24 @@ export default function Header() {
   const { t } = useTranslation();
   const pathname = usePathname();
   const showBackButton = pathname !== '/';
+
+  const { isLoaded: isUserLoaded, isSignedIn } = useUser();
+
+  const currentUserData = useQuery(
+    api.users.getCurrentUserCredits, // Use the query that gets data for the *current* user
+    // Only run the query if Clerk is loaded and the user is signed in
+    isUserLoaded && isSignedIn ? {} : "skip"
+  );
+
+  // Extract credits, handle loading/null states in JSX
+  const credits = currentUserData?.credits;
+
+  const getCreditsText = () => {
+    if (currentUserData === undefined) {
+      return '...'; // Loading state
+    }
+    return credits ?? '-'; // Show credits or '-' if null/undefined
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -44,10 +63,10 @@ export default function Header() {
           <a href="/" className="text-foreground/60 hover:text-primary transition-colors">
             {t('home')}
           </a>
-          <a href="#features" className="text-foreground/60 hover:text-primary transition-colors">
+          <a href="/#features" className="text-foreground/60 hover:text-primary transition-colors">
             {t('features')}
           </a>
-          <a href="#pricing" className="text-foreground/60 hover:text-primary transition-colors">
+          <a href="/#pricing" className="text-foreground/60 hover:text-primary transition-colors">
             {t('pricing')}
           </a>
           <a href="/generate" className="text-foreground/60 hover:text-primary transition-colors">
@@ -84,16 +103,39 @@ export default function Header() {
 
           <div className="h-6 w-[1px] bg-border hidden md:block" />
 
-          <Unauthenticated>
-            <SignInButton mode="modal">
-              <Button variant="ghost" className="hover:text-primary">
-                {t('login')}
-              </Button>
-            </SignInButton>
-          </Unauthenticated>
-          <Authenticated>
-            <UserButton />
-          </Authenticated>
+          {/* Auth Section */}
+          {!isUserLoaded ? (
+            // Optional: Show a loading spinner while Clerk is initializing
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+          ) : (
+            <>
+              {isSignedIn ? (
+                <>
+                  {/* === Replace the div with this anchor tag === */}
+                  <a
+                    href="/#pricing" // Link to homepage pricing section
+                    className="px-3 py-1 rounded-full text-sm bg-muted text-muted-foreground hover:bg-muted/80 transition-colors mr-2 hidden sm:inline-block" // Apply styling (using shadcn muted style as an example, adjust as needed)
+                  >
+                    {/* Use t() for "Credits" and display the value */}
+                    {getCreditsText()} {t('credits', { count: credits ?? 0 })} {/* Pass count for potential pluralization */}
+                  </a>
+                  {/* === End of replacement === */}
+
+
+                  {/* Optional: Add "Buy Credits" button */}
+                  {/* <Button size="sm">购买积分</Button> */}
+
+                  <UserButton afterSignOutUrl="/" />
+                </>
+              ) : (
+                <SignInButton mode="modal">
+                  <Button className="bg-primary hover:bg-primary/90">
+                    {t('login')}
+                  </Button>
+                </SignInButton>
+              )}
+            </>
+          )}
 
           {/* Mobile Menu */}
           <Sheet>
@@ -104,13 +146,21 @@ export default function Header() {
             </SheetTrigger>
             <SheetContent side="right" className="w-[250px] sm:w-[300px]">
               <div className="flex flex-col gap-6 mt-6">
+                {isSignedIn && (
+                  <a
+                    href="/#pricing"
+                    className="text-foreground/60 hover:text-primary transition-colors"
+                  >
+                    {getCreditsText()} {t('credits', { count: credits ?? 0 })}
+                  </a>
+                )}
                 <a href="/" className="text-foreground/60 hover:text-primary transition-colors">
                   {t('home')}
                 </a>
-                <a href="#features" className="text-foreground/60 hover:text-primary transition-colors">
+                <a href="/#features" className="text-foreground/60 hover:text-primary transition-colors">
                   {t('features')}
                 </a>
-                <a href="#pricing" className="text-foreground/60 hover:text-primary transition-colors">
+                <a href="/#pricing" className="text-foreground/60 hover:text-primary transition-colors">
                   {t('pricing')}
                 </a>
               </div>
