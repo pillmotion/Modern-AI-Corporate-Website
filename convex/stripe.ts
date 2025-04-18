@@ -47,7 +47,7 @@ export const pay = action({
                 credits: args.credits,
             },
             mode: "payment",
-            success_url: `${domain}`,
+            success_url: `${domain}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: `${domain}/#pricing`,
         });
 
