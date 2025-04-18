@@ -6,61 +6,34 @@ import { Globe, Code, Newspaper, Mic2, Navigation, Briefcase } from 'lucide-reac
 import { motion } from 'framer-motion';
 import { useTranslation } from '@/hooks/useTranslation';
 import { TranslationKey } from '@/lib/translations';
-import { SignInButton, useUser } from "@clerk/clerk-react";
-import { useToast } from "@/hooks/use-toast";
-import { useAction } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { SignInButton, UserButton } from "@clerk/clerk-react";
+import { useSession } from "@/lib/utils";
+import { BuyCreditsButton } from '@/components/buycredits-button';
 
 const payAsYouGo = [
   {
     type: "thousandCredits" as TranslationKey,
     price: "$6",
-    popular: false
+    popular: false,
+    credits: 1000,
   },
   {
     type: "tenThousandCredits" as TranslationKey,
     price: "$55",
-    popular: true
+    popular: true,
+    credits: 10000,
   },
   {
     type: "thirtyThousandCredits" as TranslationKey,
     price: "$150",
-    popular: false
+    popular: false,
+    credits: 30000,
   }
 ];
 
 export default function Home() {
   const { t } = useTranslation();
-  const { isLoaded: isUserLoaded, isSignedIn } = useUser();
-  const { toast } = useToast();
-  // Get the Convex action
-  const createCheckout = useAction(api.stripe.createCheckoutSession); // <-- Use the correct action name
-
-  const handlePlanClick = async (type: string) => {
-    // Button rendering logic already ensures user is loaded and signed in
-
-    try {
-      toast({ title: t('creatingPaymentLink') });
-
-      // Call the Convex action to get the Stripe Checkout URL
-      const sessionUrl = await createCheckout({ planType: type });
-
-      if (!sessionUrl) {
-        throw new Error(t('getPaymentLinkFailed'));
-      }
-
-      // Redirect the user to the Stripe Checkout page
-      window.location.href = sessionUrl; // <-- Navigate directly
-
-    } catch (error: unknown) {
-      const description = error instanceof Error ? error.message : t('unknownError');
-      toast({
-        title: t('error'),
-        description: description,
-        variant: "destructive",
-      });
-    }
-  };
+  const { isLoading, isAuthenticated } = useSession();
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -231,24 +204,14 @@ export default function Home() {
                       <div className="mb-6">
                         <span className="text-4xl font-bold bg-clip-text text-transparent bg-primary/90">{plan.price}</span>
                       </div>
-                      {(isUserLoaded && isSignedIn) ? (
-                        <Button
-                          className="w-full bg-primary text-white"
-                          variant={plan.popular ? "default" : "outline"}
-                          onClick={() => handlePlanClick(plan.type)} // 直接调用 handlePlanClick
-                        >
-                          {t('buyNow')}
-                        </Button>
-                      ) : (
-                        <SignInButton mode="modal">
-                          <Button
-                            className="w-full bg-primary text-white"
-                            variant={plan.popular ? "default" : "outline"}
-                          >
-                            {t('loginToBuy')}
-                          </Button>
-                        </SignInButton>
-                      )}
+                      {!isLoading &&
+                        (isAuthenticated ? (
+                          <BuyCreditsButton credits={plan.credits} />
+                        ) : (
+                          <SignInButton>
+                            <Button>{t('loginToBuy')}</Button>
+                          </SignInButton>
+                        ))}
                     </div>
                   </Card>
                 </motion.div>

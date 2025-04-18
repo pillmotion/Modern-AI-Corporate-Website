@@ -1,18 +1,32 @@
 import { ConvexError, v } from "convex/values";
-import { internalMutation, query } from "./_generated/server";
+import { internalMutation, internalQuery, query } from "./_generated/server";
+import { authMutation, authQuery } from "./util";
 
 const FREE_CREDITS = 5;
 
-const calculateCredits = (planType: string): number => {
-    switch (planType) {
-        case "thousandCredits": return 1000;
-        case "tenThousandCredits": return 10000;
-        case "thirtyThousandCredits": return 30000;
-        default:
-            console.warn(`Unknown plan type encountered: ${planType}`);
-            return 0; // Return 0 for unknown plans to avoid errors
-    }
-};
+export const getUserById = internalQuery({
+    args: { userId: v.string() },
+    handler: async (ctx, args) => {
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+            .first();
+
+        return user;
+    },
+});
+
+export const getProfile = query({
+    args: { userId: v.id("users") },
+    handler: async (ctx, args) => {
+        const user = await ctx.db.get(args.userId);
+
+        return {
+            name: user?.name,
+            profileImage: user?.profileImage,
+        };
+    },
+});
 
 export const createUser = internalMutation({
     args: {
@@ -58,70 +72,92 @@ export const updateUser = internalMutation({
     },
 });
 
-// 获取当前登录用户的 Convex 数据 (包括积分)
-export const getCurrentUserCredits = query({
-    args: {}, // 不需要参数
-    handler: async (ctx) => {
-        const identity = await ctx.auth.getUserIdentity(); // 获取 Clerk 身份信息
-
-        if (!identity) {
-            // 用户未登录
-            console.log("No user identity found.");
-            return null;
-        }
-
-        // 使用 Clerk subject (用户唯一 ID) 查询 Convex users 表
-        // 使用正确的索引名 "by_userId" 和字段名 "userId"
+export const updateSubscription = internalMutation({
+    args: {
+        subscriptionId: v.string(),
+        userId: v.id("users"),
+        endsOn: v.number(),
+    },
+    handler: async (ctx, args) => {
         const user = await ctx.db
             .query("users")
-            .withIndex("by_userId", (q) => q.eq("userId", identity.subject)) // Corrected index and field
-            .unique();
+            .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+            .first();
 
         if (!user) {
-            // 在 Convex users 表中未找到对应用户
-            console.warn(`Convex user not found for Clerk ID: ${identity.subject}`);
-            return null;
+            throw new Error("no user found with that user id");
         }
 
-        // 返回需要的数据
-        return {
-            _id: user._id, // Convex User ID
-            credits: user.credits,
-            // name: user.name // Optionally return other fields
-        };
+        await ctx.db.patch(user._id, {
+            subscriptionId: args.subscriptionId,
+            endsOn: args.endsOn,
+        });
+    },
+});
+
+export const updateSubscriptionBySubId = internalMutation({
+    args: { subscriptionId: v.string(), endsOn: v.number() },
+    handler: async (ctx, args) => {
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_subscriptionId", (q) =>
+                q.eq("subscriptionId", args.subscriptionId)
+            )
+            .first();
+
+        if (!user) {
+            throw new Error("no user found with that user id");
+        }
+
+        await ctx.db.patch(user._id, {
+            endsOn: args.endsOn,
+        });
+    },
+});
+
+export const getMyUser = authQuery({
+    args: {},
+    async handler(ctx, args) {
+        return ctx.user;
+    },
+});
+
+export const updateMyUser = authMutation({
+    args: { name: v.string() },
+    async handler(ctx, args) {
+        await ctx.db.patch(ctx.user._id, {
+            name: args.name,
+        });
     },
 });
 
 export const addCredits = internalMutation({
     args: {
-        clerkUserId: v.string(), // <-- CORRECTED: Should be v.string()
-        planType: v.string(),
+        userId: v.string(),
+        credits: v.number(),
     },
     handler: async (ctx, args) => {
-        // Now args.clerkUserId is correctly typed as a string for the query
         const user = await ctx.db
             .query("users")
-            .withIndex("by_userId", (q) => q.eq("userId", args.clerkUserId))
-            .unique();
+            .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+            .first();
 
         if (!user) {
-            console.error(`[addCredits] User not found with Clerk ID: ${args.clerkUserId}. Cannot add credits.`);
-            return;
+            throw new Error("no user found with that user id");
         }
-
-        const amountToAdd = calculateCredits(args.planType);
-
-        if (amountToAdd <= 0) {
-            console.error(`[addCredits] Invalid plan type or zero credits calculated for plan '${args.planType}' for user with Clerk ID ${args.clerkUserId}.`);
-            return;
-        }
-
-        const currentCredits = user.credits ?? 0;
 
         await ctx.db.patch(user._id, {
-            credits: currentCredits + amountToAdd,
+            credits: user.credits + args.credits,
         });
+    },
+});
 
-        console.log(`[addCredits] Successfully added ${amountToAdd} credits to user with Clerk ID ${args.clerkUserId} (Convex ID: ${user._id}). New balance: ${currentCredits + amountToAdd}`);
+export const getMyCredits = authQuery({
+    args: {},
+    handler: async (ctx, args): Promise<number | null> => {
+        if (!ctx.user) {
+            return null;
+        }
+        return ctx.user.credits ?? 0;
     },
 });

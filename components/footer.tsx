@@ -1,7 +1,8 @@
 'use client';
 
 import { useTranslation } from '@/hooks/useTranslation';
-import { FaTwitter, FaGithub } from 'react-icons/fa';
+import { FaGithub } from 'react-icons/fa';
+import { FaXTwitter } from "react-icons/fa6";
 import { SiWechat } from 'react-icons/si';
 import Image from 'next/image';
 import {
@@ -28,7 +29,7 @@ export default function Footer() {
             <h4 className="font-medium mb-4 text-left md:text-right">{t('footerFollow')}</h4>
             <div className="flex space-x-4 justify-start md:justify-end">
               <a href="https://x.com/hhwjsw711" className="p-2 rounded-full hover:bg-muted transition-colors" target="_blank" rel="noopener noreferrer">
-                <FaTwitter size={20} />
+                <FaXTwitter size={20} />
               </a>
               <a href="https://github.com/hhwjsw711" className="p-2 rounded-full hover:bg-muted transition-colors" target="_blank" rel="noopener noreferrer">
                 <FaGithub size={20} />
