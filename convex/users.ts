@@ -131,33 +131,3 @@ export const updateMyUser = authMutation({
     },
 });
 
-export const addCredits = internalMutation({
-    args: {
-        userId: v.string(),
-        credits: v.number(),
-    },
-    handler: async (ctx, args) => {
-        const user = await ctx.db
-            .query("users")
-            .withIndex("by_userId", (q) => q.eq("userId", args.userId))
-            .first();
-
-        if (!user) {
-            throw new Error("no user found with that user id");
-        }
-
-        await ctx.db.patch(user._id, {
-            credits: user.credits + args.credits,
-        });
-    },
-});
-
-export const getMyCredits = authQuery({
-    args: {},
-    handler: async (ctx, args): Promise<number | null> => {
-        if (!ctx.user) {
-            return null;
-        }
-        return ctx.user.credits ?? 0;
-    },
-});

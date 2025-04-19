@@ -47,11 +47,6 @@ export const translations = {
     thousandCredits: "1000 Credits",
     tenThousandCredits: "10000 Credits",
     thirtyThousandCredits: "30000 Credits",
-    paymentSuccessTitle: "Payment Successful",
-    paymentSuccessDesc: "Thank you for your purchase. Your account credits should reflect the update shortly after our system confirms the transaction",
-    thousandCreditsAdded: "1,000 credits added! Refresh later to see the update",
-    tenThousandCreditsAdded: "10,000 credits added! Refresh later to see the update",
-    thirtyThousandCreditsAdded: "30,000 credits added! Refresh later to see the update",
     backToHome: "Back to Home",
     creatingPaymentLink: "Creating payment link...",
     getPaymentLinkFailed: "Failed to get payment link",
@@ -89,6 +84,9 @@ export const translations = {
     descriptionTooLong: "Description is too long",
     descriptionLength: "Description must be at least 50 characters",
     ytShortTemplate: "Generate a 130-word max video script that is five short paragraphs. It should include a catchy hook or intro, a clear main learning point, and actionable advice for the viewer to try. The topic of the script should match a title called: {title}",
+
+    // 优化页面
+    refineYourStory: 'Refine Your Story',
 
     // 导航
     home: 'Home',
@@ -137,7 +135,7 @@ export const translations = {
     bestValue: "超值优选",
     buyNow: "立即购买",
     loginToBuy: "登录以购买",
-    loading: "加载中",
+    loading: "加载中...",
     basicPlan: "基础版",
     proPlan: "专业版",
     maxPlan: "至尊版",
@@ -151,17 +149,12 @@ export const translations = {
     thousandCredits: "1000积分",
     tenThousandCredits: "10000积分",
     thirtyThousandCredits: "30000积分",
-    paymentSuccessTitle: "支付成功",
-    paymentSuccessDesc: "感谢您的购买。系统确认交易后，您的账户积分将会很快更新",
-    thousandCreditsAdded: "已添加 1,000 积分！稍后刷新查看",
-    tenThousandCreditsAdded: "已添加 10,000 积分！稍后刷新查看",
-    thirtyThousandCreditsAdded: "已添加 30,000 积分！稍后刷新查看",
     backToHome: "返回首页",
     creatingPaymentLink: "创建支付链接中...",
     getPaymentLinkFailed: "获取支付链接失败",
 
     // 生成页面
-    craftYourVideo: '制作您的视频',
+    craftYourVideo: '制作你的视频',
     IHaveAScriptReady: '我已经准备好剧本了',
     IHaveAScriptReadyDesc: '上传你已准备好的剧本，为你呈现精彩故事',
     letAIWriteYourStory: '让人工智能书写你的故事',
@@ -193,6 +186,9 @@ export const translations = {
     descriptionTooLong: "描述太长",
     descriptionLength: "描述长度至少为50个字符",
     ytShortTemplate: "制作一个最多130字的视频脚本，包含五个简短的段落。它应该包含一个引人入胜的引言或介绍、一个清晰的主要学习点，以及可供观看者尝试的可行建议。脚本的主题应与标题 {title} 相符",
+
+    // 优化页面
+    refineYourStory: '优化你的故事',
 
     // 导航
     home: '首页',

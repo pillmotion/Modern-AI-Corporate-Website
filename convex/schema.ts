@@ -15,4 +15,16 @@ export default defineSchema({
     })
         .index("by_userId", ["userId"])
         .index("by_subscriptionId", ["subscriptionId"]),
+    story: defineTable({
+        title: v.string(),
+        userId: v.id("users"),
+        script: v.string(),
+        status: v.union(
+            v.literal("draft"),
+            v.literal("processing"),
+            v.literal("completed"),
+            v.literal("error")
+        ),
+        isVertical: v.optional(v.boolean()),
+    }).index("by_user", ["userId"]),
 });

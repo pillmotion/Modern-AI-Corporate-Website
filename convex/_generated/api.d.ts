@@ -14,7 +14,12 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as clerk from "../clerk.js";
+import type * as credits from "../credits.js";
+import type * as guidedStory from "../guidedStory.js";
 import type * as http from "../http.js";
+import type * as replicate from "../replicate.js";
+import type * as segments from "../segments.js";
+import type * as story from "../story.js";
 import type * as stripe from "../stripe.js";
 import type * as users from "../users.js";
 import type * as util from "../util.js";
@@ -29,7 +34,12 @@ import type * as util from "../util.js";
  */
 declare const fullApi: ApiFromModules<{
   clerk: typeof clerk;
+  credits: typeof credits;
+  guidedStory: typeof guidedStory;
   http: typeof http;
+  replicate: typeof replicate;
+  segments: typeof segments;
+  story: typeof story;
   stripe: typeof stripe;
   users: typeof users;
   util: typeof util;

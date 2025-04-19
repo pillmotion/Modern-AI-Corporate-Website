@@ -47,7 +47,7 @@ export const pay = action({
                 credits: args.credits,
             },
             mode: "payment",
-            success_url: `${domain}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+            success_url: `${domain}`,
             cancel_url: `${domain}/#pricing`,
         });
 
@@ -78,7 +78,7 @@ export const fulfill = internalAction({
                 const userId = completedEvent.metadata.userId;
                 const credits = completedEvent.metadata.credits;
 
-                await ctx.runMutation(internal.users.addCredits, {
+                await ctx.runMutation(internal.credits.addCredits, {
                     userId,
                     credits: parseInt(credits),
                 });

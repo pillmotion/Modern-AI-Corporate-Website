@@ -29,7 +29,7 @@ export default function Header() {
   const { isLoading, isAuthenticated } = useSession();
 
   const credits = useQuery(
-    api.users.getMyCredits,
+    api.credits.getMyCredits,
     !isLoading && isAuthenticated ? {} : "skip"
   );
 
