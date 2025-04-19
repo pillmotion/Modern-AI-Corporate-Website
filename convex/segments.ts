@@ -5,10 +5,7 @@ import { internal } from "./_generated/api";
 import { z } from 'zod';
 import { zodResponseFormat } from 'openai/helpers/zod';
 import OpenAI from "openai";
-
-const CREDIT_COSTS = {
-    IMAGE_GENERATION: 10,
-};
+import { CREDIT_COSTS } from "./constants";
 
 /* export const createSegmentInternal = internalMutation({
     args: {

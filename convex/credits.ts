@@ -52,5 +52,4 @@ export async function consumeCreditsHelper(
     await ctx.db.patch(userId, {
         credits: (user.credits ?? 0) - amountToUse,
     });
-    console.log(`Consumed ${amountToUse} credits for user ${userId}.`);
 }

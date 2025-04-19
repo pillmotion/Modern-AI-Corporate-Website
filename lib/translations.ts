@@ -87,6 +87,16 @@ export const translations = {
 
     // 优化页面
     refineYourStory: 'Refine Your Story',
+    refineStory: 'Refine Story',
+    generateSegments: 'Generate Segments',
+    writeOrPasteStory: 'Write or Paste Story',
+    saving: 'Saving',
+    saved: 'Saved',
+    enterRefinementInstruction: 'Enter your refinement instruction. This will cost {count} credits',
+    refinementPlaceholder: 'Enter refinement instruction...',
+    refine: 'Refine',
+    cancel: 'Cancel',
+    storyNotFound: 'Story not found',
 
     // 导航
     home: 'Home',
@@ -189,6 +199,16 @@ export const translations = {
 
     // 优化页面
     refineYourStory: '优化你的故事',
+    refineStory: '优化故事',
+    generateSegments: '生成片段',
+    writeOrPasteStory: '编辑或粘贴故事',
+    saving: '保存中',
+    saved: '已保存',
+    enterRefinementInstruction: '输入你的优化指令。这将花费{count}积分',
+    refinementPlaceholder: '输入优化指令...',
+    refine: '优化',
+    cancel: '取消',
+    storyNotFound: '故事未找到',
 
     // 导航
     home: '首页',

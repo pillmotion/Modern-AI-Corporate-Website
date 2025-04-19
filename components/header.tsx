@@ -3,7 +3,7 @@
 import { useTheme } from 'next-themes';
 import { useLanguage } from './language-provider';
 import { Button } from '@/components/ui/button';
-import { Moon, Sun, Globe, Menu, ArrowLeft } from 'lucide-react';
+import { Moon, Sun, Globe, Menu, ArrowLeft, MessageCircleHeart } from 'lucide-react';
 import Logo from './logo';
 import {
   DropdownMenu,
@@ -108,6 +108,7 @@ export default function Header() {
                     {/* 显示积分 */}
                     {getCreditsText()} {t('credits', { count: credits ?? 0 })}
                   </a>
+
                   <UserButton />
                 </>
               )}

@@ -1,13 +1,11 @@
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { authMutation } from "./util";
-import { internalAction, internalMutation, mutation } from "./_generated/server";
+import { action, internalAction, internalMutation, mutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { consumeCreditsHelper } from "./credits";
 import OpenAI from "openai";
-
-const CREDIT_COSTS = {
-    CHAT_COMPLETION: 1,
-};
+import { CREDIT_COSTS } from "./constants";
+import { verifyStoryOwnerHelper } from "./story";
 
 export const generateGuidedStoryMutation = authMutation({
     args: {
@@ -88,12 +86,122 @@ export const generateGuidedStoryAction = internalAction({
     }
 });
 
+export const refineStoryMutation = authMutation({
+    args: {
+        storyId: v.id("story"),
+        refinement: v.string(),
+    },
+    handler: async (ctx, args): Promise<void> => {
+        const { storyId, refinement } = args;
+
+        const story = await verifyStoryOwnerHelper(ctx, storyId);
+        const currentScript = story.script;
+
+        if (!currentScript?.trim()) {
+            console.warn(`Cannot refine empty script for story: ${storyId}`);
+            return;
+        }
+
+        if (story.status === "processing") {
+            console.warn(`Story ${storyId} is already processing.`);
+            throw new ConvexError("Story is currently being processed. Please wait.");
+        }
+
+        await consumeCreditsHelper(ctx, ctx.user._id, CREDIT_COSTS.CHAT_COMPLETION);
+
+        try {
+            await ctx.db.patch(storyId, { status: "processing" });
+        } catch (patchError) {
+            console.error(`Failed to set status to processing for story ${storyId}:`, patchError);
+            throw new ConvexError("Failed to update story status before scheduling refinement.");
+        }
+
+        await ctx.scheduler.runAfter(0, internal.guidedStory.refineStoryAction, {
+            storyId: storyId,
+            currentScript: currentScript,
+            refinement: refinement,
+        });
+    },
+});
+
+export const refineStoryAction = internalAction({
+    args: {
+        storyId: v.id("story"),
+        currentScript: v.string(),
+        refinement: v.string(),
+    },
+    handler: async (ctx, args): Promise<void> => {
+        const { storyId, currentScript, refinement } = args;
+
+        const openai = new OpenAI({
+            baseURL: 'https://api.deepseek.com',
+            apiKey: process.env.DEEPSEEK_API_KEY
+        });
+        if (!process.env.DEEPSEEK_API_KEY) {
+            throw new Error("DeepSeek API key not set in environment variables.");
+        }
+
+        let refinedScript: string | null = null;
+        try {
+            const response = await openai.chat.completions.create({
+                model: "deepseek-chat",
+                messages: [
+                    {
+                        role: "system",
+                        content: "You are a professional writer tasked with creating a short story for a voice over based on a given description. The story should be a story that is 10,000 characters max length. DO NOT TITLE ANY SEGMENT. JUST RETURN THE TEXT OF THE ENTIRE STORY. THIS IS FOR A VOICE OVER, ONLY INCLUDE THE SPOKEN WORDS.",
+                    },
+                    {
+                        role: "user",
+                        content: `Refinement instruction: ${refinement}\n\nOriginal script:\n---\n${currentScript}\n---`,
+                    },
+                ],
+                temperature: 0.8,
+            });
+
+            refinedScript = response.choices[0].message.content?.trim() ?? null;
+
+            if (!refinedScript) {
+                console.warn(`AI refinement returned empty content for story ${storyId}.`);
+                await ctx.runMutation(internal.guidedStory.updateStoryStatusToError, {
+                    storyId,
+                    errorMessage: "AI failed to produce refinement content.",
+                });
+                return;
+            }
+
+        } catch (error) {
+            console.error(`AI refinement API call failed for story ${storyId}:`, error);
+            const errorMessage = `AI service error: ${error instanceof Error ? error.message : String(error)}`;
+            await ctx.runMutation(internal.guidedStory.updateStoryStatusToError, {
+                storyId,
+                errorMessage,
+            });
+            throw error;
+        }
+
+        try {
+            await ctx.runMutation(internal.guidedStory.updateStoryScript, {
+                storyId: storyId,
+                script: refinedScript,
+                status: "completed",
+            });
+        } catch (saveError) {
+            console.error(`Failed to save refined script for story ${storyId}:`, saveError);
+            const errorMessage = `Database error saving refinement: ${saveError instanceof Error ? saveError.message : String(saveError)}`;
+            await ctx.runMutation(internal.guidedStory.updateStoryStatusToError, {
+                storyId,
+                errorMessage,
+            });
+            throw saveError;
+        }
+    }
+});
+
 export const updateStoryStatusToError = internalMutation({
     args: { storyId: v.id("story"), errorMessage: v.string() },
     handler: async (ctx, args) => {
         await ctx.db.patch(args.storyId, {
             status: "error",
-
         });
     },
 });
@@ -125,6 +233,8 @@ export const updateStoryScriptPublic = mutation({
     },
     handler: async (ctx, args) => {
         const { storyId, script } = args;
+        const accessObj = await verifyStoryOwnerHelper(ctx, storyId);
+        if (!accessObj) throw new Error("You don't have access to this story");
         await ctx.db.patch(storyId, {
             script,
         });
