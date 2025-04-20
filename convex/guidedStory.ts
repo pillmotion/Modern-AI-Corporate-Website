@@ -94,12 +94,16 @@ export const refineStoryMutation = authMutation({
     handler: async (ctx, args): Promise<void> => {
         const { storyId, refinement } = args;
 
-        const story = await verifyStoryOwnerHelper(ctx, storyId);
+        const accessObj = await verifyStoryOwnerHelper(ctx, storyId);
+
+        const story = accessObj.story;
+        const userId = accessObj.userId;
+
         const currentScript = story.script;
 
         if (!currentScript?.trim()) {
             console.warn(`Cannot refine empty script for story: ${storyId}`);
-            return;
+            throw new ConvexError("Cannot refine an empty script.");
         }
 
         if (story.status === "processing") {
@@ -107,7 +111,7 @@ export const refineStoryMutation = authMutation({
             throw new ConvexError("Story is currently being processed. Please wait.");
         }
 
-        await consumeCreditsHelper(ctx, ctx.user._id, CREDIT_COSTS.CHAT_COMPLETION);
+        await consumeCreditsHelper(ctx, userId, CREDIT_COSTS.CHAT_COMPLETION);
 
         try {
             await ctx.db.patch(storyId, { status: "processing" });
@@ -226,22 +230,21 @@ export const updateStoryScript = internalMutation({
     },
 });
 
-export const updateStoryScriptPublic = mutation({
+export const updateStoryScriptPublic = authMutation({
     args: {
         storyId: v.id("story"),
         script: v.string(),
     },
     handler: async (ctx, args) => {
         const { storyId, script } = args;
-        const accessObj = await verifyStoryOwnerHelper(ctx, storyId);
-        if (!accessObj) throw new Error("You don't have access to this story");
+        await verifyStoryOwnerHelper(ctx, storyId);
         await ctx.db.patch(storyId, {
             script,
         });
     },
 });
 
-/* export const generateSegmentsMutation = authMutation({
+export const generateSegmentsMutation = authMutation({
     args: {
         storyId: v.id("story"),
         isVertical: v.boolean(),
@@ -250,25 +253,25 @@ export const updateStoryScriptPublic = mutation({
         const { storyId, isVertical } = args;
 
         const accessObj = await verifyStoryOwnerHelper(ctx, storyId);
-        if (!accessObj) throw new Error("You don't have access to this story");
 
         const story = accessObj.story;
+        const userId = accessObj.userId;
 
         await ctx.db.patch(storyId, { isVertical });
 
-        await consumeCreditsHelper(ctx, accessObj.userId, CREDIT_COSTS.CHAT_COMPLETION);
+        await consumeCreditsHelper(ctx, userId, CREDIT_COSTS.CHAT_COMPLETION);
 
-        await ctx.scheduler.runAfter(
+        /* await ctx.scheduler.runAfter(
             0,
             internal.guidedStory.generateSegmentsAction,
             {
                 storyId,
                 script: story.script,
-                userId: accessObj.userId,
+                userId: userId,
             },
-        );
+        ); */
     },
-}); */
+});
 
 /* export const generateSegmentsAction = internalAction({
     args: {

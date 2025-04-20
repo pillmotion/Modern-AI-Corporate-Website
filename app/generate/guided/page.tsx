@@ -147,7 +147,7 @@ export default function GuidedGenerate() {
                                                             <FormControl>
                                                                 <Textarea
                                                                     placeholder={t('descriptionPlaceholder')}
-                                                                    className="min-h-[120px] md:min-h-[200px] bg-background/70 backdrop-blur-sm border-primary/20 focus:border-primary/40 transition-all duration-300 resize-none text-sm md:text-base"
+                                                                    className="min-h-[160px] md:min-h-[200px] bg-background/70 backdrop-blur-sm border-primary/20 focus:border-primary/40 transition-all duration-300 resize-none text-sm md:text-base"
                                                                     maxLength={SERVICE_LIMITS.minimax}
                                                                     {...field}
                                                                     disabled={isPending}

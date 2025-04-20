@@ -16,7 +16,7 @@ export const getStory = authQuery({
 export async function verifyStoryOwnerHelper(
     ctx: MutationCtx | QueryCtx,
     storyId: Id<"story">
-): Promise<Doc<"story">> {
+): Promise<{ story: Doc<"story">, userId: Id<"users"> }> {
 
     // 1. 获取故事文档
     const story = await ctx.db.get(storyId);
@@ -25,11 +25,14 @@ export async function verifyStoryOwnerHelper(
     }
     const user = (ctx as any).user;
 
-    if (!user) {
-        throw new ConvexError("User record not found for the logged-in user.");
+    if (!user?._id) {
+        throw new ConvexError("User authentication context is missing, invalid, or user ID is unavailable.");
     }
-    if (story.userId !== user._id) {
-        throw new ConvexError(`Access denied: User ${user._id} does not own story ${storyId} (Owner: ${story.userId})`);
+    const userId = user._id as Id<"users">;
+
+    if (story.userId !== userId) {
+        throw new ConvexError(`Access denied: User ${userId} does not own story ${storyId} (Owner: ${story.userId})`);
     }
-    return story;
+
+    return { story: story, userId: userId };
 }

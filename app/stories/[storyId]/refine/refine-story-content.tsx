@@ -12,7 +12,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { Textarea } from "@/components/ui/textarea";
 import { CREDIT_COSTS, SERVICE_LIMITS } from "@/convex/constants";
 import { Button } from "@/components/ui/button";
-import { Wand2, Sparkles, Save } from "lucide-react";
+import { Wand2, Sparkles, Save, Smartphone, Monitor } from "lucide-react";
 import { RequireAuth } from "@/components/require-auth";
 import {
     Dialog,
@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input"
 import useMediaQuery from "@/hooks/use-media-query";
+import { analyzeTextAndEstimateDuration } from "@/lib/utils";
 
 // debounce function
 function debounce<T extends (...args: any[]) => any>(func: T, wait: number): { (...args: Parameters<T>): void; cancel: () => void; } {
@@ -68,10 +69,11 @@ export function RefineStoryContent() {
     const [scriptValue, setScriptValue] = useState<string>("");
     const [isSaving, setIsSaving] = useState(false);
     const [hasInitialized, setHasInitialized] = useState(false);
-    const [isVertical, setIsVertical] = useState(story?.isVertical ?? true);
+    const [isVertical, setIsVertical] = useState<boolean>(true);
     const [isRefineDialogOpen, setIsRefineDialogOpen] = useState(false);
     const [refinementInstruction, setRefinementInstruction] = useState("");
     const [isGenerating, setIsGenerating] = useState(false);
+    const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false);
 
     const updateStoryScript = useMutation(
         api.guidedStory.updateStoryScriptPublic,
@@ -79,9 +81,9 @@ export function RefineStoryContent() {
 
     const scheduleRefinement = useMutation(api.guidedStory.refineStoryMutation);
 
-    /* const generateSegments = useMutation(
+    const generateSegments = useMutation(
         api.guidedStory.generateSegmentsMutation,
-    ); */
+    );
 
     const debouncedUpdate = useCallback(
         debounce(async (newScript: string) => {
@@ -119,6 +121,7 @@ export function RefineStoryContent() {
     useEffect(() => {
         if (story && !hasInitialized) {
             setScriptValue(story.script);
+            setIsVertical(story.isVertical ?? true);
             setHasInitialized(true);
         }
     }, [story, hasInitialized]);
@@ -164,22 +167,38 @@ export function RefineStoryContent() {
         }
     };
 
-    /* const handleGenerateSegments = async () => {
+    const handleGenerateSegments = async () => {
+        if (isGenerating || isSaving || story?.status === 'processing' || !scriptValue.trim()) return;
+        setIsGenerateDialogOpen(false);
         setIsGenerating(true);
         try {
             await generateSegments({ storyId, isVertical });
-            setIsGenerating(false);
             router.push(`/stories/${storyId}`);
         } catch (error) {
-            console.error("Failed to generate segments:", error);
-        } finally {
+            console.error("Failed to initiate segment generation:", error);
             setIsGenerating(false);
         }
-    }; */
+    };
 
-    const charCount = scriptValue.length;
-    const wordCount = scriptValue.split(/\s+/).filter(Boolean).length;
-    /* const estimatedVideoLength = estimateVideoLength(wordCount); */
+    const analysisResult = analyzeTextAndEstimateDuration(scriptValue);
+
+    const charCount = analysisResult.characterCount;
+    const durationParts = analysisResult.duration;
+
+    const formatDurationString = (duration: { minutes: number, seconds: number }): string => {
+        const { minutes, seconds } = duration;
+        if (minutes === 0 && seconds === 0) {
+            return t('durationSecondsOnly', { count: 0 });
+        } else if (minutes === 0) {
+            return t('durationSecondsOnly', { count: seconds });
+        } else if (seconds === 0) {
+            return t('durationMinutesOnly', { count: minutes });
+        } else {
+            return t('durationMinutesAndSeconds', { minutes: minutes, seconds: seconds });
+        }
+    };
+
+    const estimatedVideoLength = formatDurationString(durationParts);
 
     const estimatedSegments = scriptValue.split(/\n{2,}/).filter(Boolean).length;
     const estimatedCredits = estimatedSegments * CREDIT_COSTS.IMAGE_GENERATION;
@@ -193,6 +212,15 @@ export function RefineStoryContent() {
     const RefineDescription = isMobile ? DrawerDescription : DialogDescription;
     const RefineFooter = isMobile ? DrawerFooter : DialogFooter;
     const RefineClose = isMobile ? DrawerClose : DialogClose;
+
+    const GenerateWrapper = isMobile ? Drawer : Dialog;
+    const GenerateTrigger = isMobile ? DrawerTrigger : DialogTrigger;
+    const GenerateContent = isMobile ? DrawerContent : DialogContent;
+    const GenerateHeader = isMobile ? DrawerHeader : DialogHeader;
+    const GenerateTitle = isMobile ? DrawerTitle : DialogTitle;
+    const GenerateDescription = isMobile ? DrawerDescription : DialogDescription;
+    const GenerateFooter = isMobile ? DrawerFooter : DialogFooter;
+    const GenerateClose = isMobile ? DrawerClose : DialogClose;
 
     return (
         <div className="min-h-screen">
@@ -218,13 +246,16 @@ export function RefineStoryContent() {
                                 <CardContent className="space-y-3 md:space-y-4">
                                     <div className="relative">
                                         <Textarea
-                                            className="min-h-[120px] md:min-h-[400px] bg-background/70 backdrop-blur-sm border-primary/20 focus:border-primary/40 transition-all duration-300 resize-none text-sm md:text-base"
+                                            className="min-h-[280px] md:min-h-[350px] bg-background/70 backdrop-blur-sm border-primary/20 focus:border-primary/40 transition-all duration-300 resize-none text-sm md:text-base"
                                             maxLength={SERVICE_LIMITS.minimax}
                                             value={scriptValue}
                                             onChange={handleScriptChange}
                                             disabled={isSaving || story?.status === 'processing' || isGenerating}
                                             placeholder={t('writeOrPasteStory')}
                                         />
+                                        <div className="absolute bottom-2 left-2 text-xs text-muted-foreground">
+                                            {t('estimatedVideoLengthLabel')}: {estimatedVideoLength}
+                                        </div>
                                         <div className="absolute bottom-2 right-2 text-xs text-muted-foreground">
                                             {charCount}/{SERVICE_LIMITS.minimax.toLocaleString()} {t('characters')}
                                         </div>
@@ -284,17 +315,72 @@ export function RefineStoryContent() {
                                                 </RefineFooter>
                                             </RefineContent>
                                         </RefineWrapper>
-                                        <RequireAuth>
-                                            <Button
-                                                disabled={isSaving || story?.status === 'processing' || isGenerating || !scriptValue.trim()}
-                                                variant="outline"
-                                                // onClick={handleGenerateSegments}
-                                                className="flex-1 h-10 text-sm border-primary/20 hover:border-primary/40 hover:bg-primary/5"
-                                            >
-                                                {isGenerating ? <Spinner className="mr-2 h-4 w-4" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                                                {t('generateSegments')}
-                                            </Button>
-                                        </RequireAuth>
+                                        <GenerateWrapper open={isGenerateDialogOpen} onOpenChange={setIsGenerateDialogOpen}>
+                                            <RequireAuth>
+                                                <GenerateTrigger asChild>
+                                                    <Button
+                                                        disabled={isSaving || story?.status === 'processing' || isGenerating || !scriptValue.trim()}
+                                                        variant="outline"
+                                                        className="flex-1 h-10 text-sm border-primary/20 hover:border-primary/40 hover:bg-primary/5"
+                                                    >
+                                                        {isGenerating ? <Spinner className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                                                        {t('generateSegments')}
+                                                    </Button>
+                                                </GenerateTrigger>
+                                            </RequireAuth>
+
+                                            <GenerateContent className={isMobile ? "" : "sm:max-w-[480px]"}>
+                                                <GenerateHeader className={isMobile ? "text-left" : ""}>
+                                                    <GenerateTitle>{t('chooseVideoOrientationTitle')}</GenerateTitle>
+                                                    <GenerateDescription>
+                                                        {t('chooseVideoOrientationDesc1')} <br />
+                                                        {t('chooseVideoOrientationDesc2')}
+                                                    </GenerateDescription>
+                                                </GenerateHeader>
+
+                                                <div className="grid gap-4 py-4 px-4 sm:px-6">
+                                                    <div className="flex gap-4 justify-center">
+                                                        <Button
+                                                            variant={isVertical ? "default" : "outline"}
+                                                            onClick={() => setIsVertical(true)}
+                                                            className="flex-1 flex items-center gap-2"
+                                                            disabled={story?.status === 'processing' || isGenerating}
+                                                        >
+                                                            <Smartphone className="h-4 w-4" />
+                                                            {t('orientationVertical')}
+                                                        </Button>
+                                                        <Button
+                                                            variant={!isVertical ? "default" : "outline"}
+                                                            onClick={() => setIsVertical(false)}
+                                                            className="flex-1 flex items-center gap-2"
+                                                            disabled={story?.status === 'processing' || isGenerating}
+                                                        >
+                                                            <Monitor className="h-4 w-4" />
+                                                            {t('orientationHorizontal')}
+                                                        </Button>
+                                                    </div>
+                                                    <p className="text-sm text-destructive text-center mt-2">
+                                                        {t('orientationChangeWarning')}
+                                                    </p>
+                                                </div>
+
+                                                <GenerateFooter className={isMobile ? "pt-2" : ""}>
+                                                    <GenerateClose asChild>
+                                                        <Button type="button" variant={isMobile ? "outline" : "secondary"} disabled={isGenerating}>
+                                                            {t('cancel')}
+                                                        </Button>
+                                                    </GenerateClose>
+                                                    <Button
+                                                        type="button"
+                                                        onClick={handleGenerateSegments}
+                                                        disabled={story?.status === 'processing' || isGenerating || !scriptValue.trim()}
+                                                    >
+                                                        {isGenerating && <Spinner className="mr-2 h-4 w-4 animate-spin" />}
+                                                        {t('generateWithCredits', { count: estimatedCredits })}
+                                                    </Button>
+                                                </GenerateFooter>
+                                            </GenerateContent>
+                                        </GenerateWrapper>
                                     </div>
                                 </CardContent>
                             </Card>
