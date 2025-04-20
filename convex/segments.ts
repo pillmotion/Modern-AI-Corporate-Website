@@ -82,15 +82,14 @@ export const generateSegmentImageReplicateInternal = internalAction({
             storyId = segmentDoc.storyId;
 
             const openai = new OpenAI({
-                baseURL: 'https://api.deepseek.com',
-                apiKey: process.env.DEEPSEEK_API_KEY
+                apiKey: process.env.OPENAI_API_KEY
             });
-            if (!process.env.DEEPSEEK_API_KEY) {
-                throw new Error("DeepSeek API key not set in environment variables.");
+            if (!process.env.OPENAI_API_KEY) {
+                throw new Error("OpenAI API key not set in environment variables.");
             }
             const prompt = await openai.chat.completions
                 .create({
-                    model: "deepseek-chat",
+                    model: "gpt-4o-mini",
                     messages: [
                         {
                             role: "system",

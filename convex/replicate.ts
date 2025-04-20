@@ -1,3 +1,5 @@
+"use node";
+
 import Replicate from "replicate";
 import { internalAction } from "./_generated/server";
 import { v } from "convex/values";
@@ -5,7 +7,9 @@ import { internal } from "./_generated/api";
 import { Jimp } from 'jimp';
 import { Id } from "./_generated/dataModel";
 
-const replicate = new Replicate();
+const replicate = new Replicate({
+    auth: process.env.REPLICATE_API_TOKEN,
+});
 
 const SCALED_IMAGE_WIDTH = 468;
 const SCALED_IMAGE_HEIGHT = 850;
@@ -20,13 +24,12 @@ export const regenerateSegmentImageUsingPrompt = internalAction({
             if (!segment) throw new Error("Segment not found");
             storyId = segment.storyId;
 
-            const promptToUse = segment.prompt; // *** Fetch prompt from segment ***
+            const promptToUse = segment.prompt;
             if (!promptToUse) throw new Error(`Prompt missing for segment ${args.segmentId}`);
 
             const story = await ctx.runQuery(internal.story.getStoryInternal, { storyId });
             if (!story) throw new Error("Story not found");
 
-            // *** Clear previous error before trying Replicate (optional but good) ***
             await ctx.runMutation(internal.segments.updateSegment, {
                 segmentId: args.segmentId,
                 error: "",

@@ -43,15 +43,14 @@ export const generateGuidedStoryAction = internalAction({
     },
     async handler(ctx, args) {
         const openai = new OpenAI({
-            baseURL: 'https://api.deepseek.com',
-            apiKey: process.env.DEEPSEEK_API_KEY
+            apiKey: process.env.OPENAI_API_KEY
         });
-        if (!process.env.DEEPSEEK_API_KEY) {
-            throw new Error("DeepSeek API key not set in environment variables.");
+        if (!process.env.OPENAI_API_KEY) {
+            throw new Error("OpenAI API key not set in environment variables.");
         }
         try {
             const response = await openai.chat.completions.create({
-                model: "deepseek-chat",
+                model: "gpt-4o-mini",
                 messages: [
                     {
                         role: "system",
@@ -138,17 +137,16 @@ export const refineStoryAction = internalAction({
         const { storyId, currentScript, refinement } = args;
 
         const openai = new OpenAI({
-            baseURL: 'https://api.deepseek.com',
-            apiKey: process.env.DEEPSEEK_API_KEY
+            apiKey: process.env.OPENAI_API_KEY
         });
-        if (!process.env.DEEPSEEK_API_KEY) {
-            throw new Error("DeepSeek API key not set in environment variables.");
+        if (!process.env.OPENAI_API_KEY) {
+            throw new Error("OpenAI API key not set in environment variables.");
         }
 
         let refinedScript: string | null = null;
         try {
             const response = await openai.chat.completions.create({
-                model: "deepseek-chat",
+                model: "gpt-4o-mini",
                 messages: [
                     {
                         role: "system",
@@ -360,19 +358,18 @@ async function generateContext(script: string): Promise<string | null> {
     }
 
     const openai = new OpenAI({
-        baseURL: 'https://api.deepseek.com',
-        apiKey: process.env.DEEPSEEK_API_KEY
+        apiKey: process.env.OPENAI_API_KEY
     });
-    if (!process.env.DEEPSEEK_API_KEY) {
-        console.error("DeepSeek API key not set for generateContext.");
-        throw new Error("DeepSeek API key not set in environment variables.");
+    if (!process.env.OPENAI_API_KEY) {
+        console.error("OpenAI API key not set for generateContext.");
+        throw new Error("OpenAI API key not set in environment variables.");
     }
 
     const systemPrompt = `You are an AI assistant specialized in summarizing texts. Read the following story script and provide a concise summary (1-2 sentences) capturing the main theme, characters, and setting. This summary will be used as context for generating consistent images for different parts of the story. Focus on visual elements and overall mood. Output ONLY the summary text.`;
 
     try {
         const response = await openai.chat.completions.create({
-            model: "deepseek-chat",
+            model: "gpt-4o-mini",
             messages: [
                 { role: "system", content: systemPrompt },
                 { role: "user", content: script },
