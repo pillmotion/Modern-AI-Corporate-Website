@@ -206,6 +206,8 @@ export const updateStoryStatusToError = internalMutation({
     handler: async (ctx, args) => {
         await ctx.db.patch(args.storyId, {
             status: "error",
+            errorMessage: args.errorMessage,
+            pendingSegments: 0, // Ensure counter is cleared
         });
     },
 });
@@ -261,7 +263,7 @@ export const generateSegmentsMutation = authMutation({
 
         await consumeCreditsHelper(ctx, userId, CREDIT_COSTS.CHAT_COMPLETION);
 
-        /* await ctx.scheduler.runAfter(
+        await ctx.scheduler.runAfter(
             0,
             internal.guidedStory.generateSegmentsAction,
             {
@@ -269,35 +271,126 @@ export const generateSegmentsMutation = authMutation({
                 script: story.script,
                 userId: userId,
             },
-        ); */
+        );
     },
 });
 
-/* export const generateSegmentsAction = internalAction({
+export const generateSegmentsAction = internalAction({
     args: {
         storyId: v.id("story"),
         script: v.string(),
         userId: v.id("users"),
     },
     handler: async (ctx, args) => {
-        const context = await generateContext(args.script);
-        if (!context) throw new Error("Failed to generate context");
+        let context: string | null = null;
+        try {
+            // await consumeCreditsHelper(ctx, args.userId, CREDIT_COSTS.CHAT_COMPLETION_LOW);
+            context = await generateContext(args.script);
 
-        const segments = args.script.split(/\n{2,}/);
+            if (!context) {
+                await ctx.runMutation(internal.guidedStory.updateStoryStatusToError, {
+                    storyId: args.storyId,
+                    errorMessage: "Failed to generate story context.",
+                });
+                return;
+            }
+            await ctx.runMutation(internal.story.updateStoryContext, {
+                storyId: args.storyId,
+                context,
+            });
+        } catch (contextError) {
+            console.error(`Error during context generation/saving for story ${args.storyId}:`, contextError);
+            await ctx.runMutation(internal.guidedStory.updateStoryStatusToError, {
+                storyId: args.storyId,
+                errorMessage: contextError instanceof Error ? `Context error: ${contextError.message}` : "Unknown context error",
+            });
+            return;
+        }
 
-        await ctx.runMutation(internal.story.updateStoryContext, {
-            storyId: args.storyId,
-            context,
-        });
+        const segments = args.script?.split(/\n{2,}/).filter(Boolean) ?? [];
+        if (segments.length === 0) {
+            await ctx.runMutation(internal.guidedStory.updateStoryScript, {
+                storyId: args.storyId, script: args.script, status: "completed"
+            });
+            return;
+        }
+
+        try {
+            await ctx.runMutation(internal.story.initializeSegmentGeneration, {
+                storyId: args.storyId,
+                segmentCount: segments.length,
+            });
+        } catch (initError) {
+            console.error(`Failed to init segment generation for story ${args.storyId}:`, initError);
+            await ctx.runMutation(internal.guidedStory.updateStoryStatusToError, {
+                storyId: args.storyId,
+                errorMessage: "Initialization failed.",
+            });
+            return;
+        }
 
         for (let i = 0; i < segments.length; i++) {
-            await ctx.runMutation(internal.segments.createSegmentWithImageInternal, {
-                storyId: args.storyId,
-                text: segments[i],
-                order: i,
-                context,
-                userId: args.userId,
-            });
+            try {
+                await ctx.runMutation(internal.segments.createSegmentWithImageInternal, {
+                    storyId: args.storyId,
+                    text: segments[i],
+                    order: i,
+                    context: context,
+                    userId: args.userId,
+                });
+            } catch (scheduleError) {
+                console.error(`Failed to schedule segment ${i} for story ${args.storyId}:`, scheduleError);
+
+                try {
+                    await ctx.runMutation(internal.story.decrementPendingSegmentsAndFinalize, {
+                        storyId: args.storyId,
+                    });
+                } catch (decrementError) {
+                    console.error(`Failed to decrement after scheduling error:`, decrementError);
+                }
+            }
         }
     }
-}); */
+});
+
+async function generateContext(script: string): Promise<string | null> {
+    if (!script || !script.trim()) {
+        console.warn("generateContext called with empty script.");
+        return null;
+    }
+
+    const openai = new OpenAI({
+        baseURL: 'https://api.deepseek.com',
+        apiKey: process.env.DEEPSEEK_API_KEY
+    });
+    if (!process.env.DEEPSEEK_API_KEY) {
+        console.error("DeepSeek API key not set for generateContext.");
+        throw new Error("DeepSeek API key not set in environment variables.");
+    }
+
+    const systemPrompt = `You are an AI assistant specialized in summarizing texts. Read the following story script and provide a concise summary (1-2 sentences) capturing the main theme, characters, and setting. This summary will be used as context for generating consistent images for different parts of the story. Focus on visual elements and overall mood. Output ONLY the summary text.`;
+
+    try {
+        const response = await openai.chat.completions.create({
+            model: "deepseek-chat",
+            messages: [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: script },
+            ],
+            temperature: 0.5,
+            max_tokens: 100,
+        });
+
+        const context = response.choices[0]?.message?.content?.trim() ?? null;
+
+        if (!context) {
+            console.warn("AI failed to generate context for the script.");
+            return null;
+        }
+        return context;
+
+    } catch (error) {
+        console.error("Error calling OpenAI for context generation:", error);
+        return null;
+    }
+}

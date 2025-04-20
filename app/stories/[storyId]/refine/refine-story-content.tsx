@@ -289,29 +289,18 @@ export function RefineStoryContent() {
                                                     />
                                                 </div>
                                                 <RefineFooter className={isMobile ? "pt-2" : ""}>
-                                                    {isMobile && (
-                                                        <Button
-                                                            type="button"
-                                                            onClick={handleConfirmRefine}
-                                                            disabled={!refinementInstruction.trim()}
-                                                        >
-                                                            {t('refine')}
-                                                        </Button>
-                                                    )}
                                                     <RefineClose asChild>
                                                         <Button type="button" variant={isMobile ? "outline" : "secondary"}>
                                                             {t('cancel')}
                                                         </Button>
                                                     </RefineClose>
-                                                    {!isMobile && (
-                                                        <Button
-                                                            type="button"
-                                                            onClick={handleConfirmRefine}
-                                                            disabled={!refinementInstruction.trim() || story?.status === 'processing'}
-                                                        >
-                                                            {t('refine')}
-                                                        </Button>
-                                                    )}
+                                                    <Button
+                                                        type="button"
+                                                        onClick={handleConfirmRefine}
+                                                        disabled={!refinementInstruction.trim() || story?.status === 'processing'}
+                                                    >
+                                                        {t('refine')}
+                                                    </Button>
                                                 </RefineFooter>
                                             </RefineContent>
                                         </RefineWrapper>
@@ -359,7 +348,7 @@ export function RefineStoryContent() {
                                                             {t('orientationHorizontal')}
                                                         </Button>
                                                     </div>
-                                                    <p className="text-sm text-destructive text-center mt-2">
+                                                    <p className="text-sm text-primary text-center mt-2">
                                                         {t('orientationChangeWarning')}
                                                     </p>
                                                 </div>

@@ -21,10 +21,28 @@ export default defineSchema({
         script: v.string(),
         status: v.union(
             v.literal("draft"),
-            v.literal("processing"),
+            v.literal("processing"),         // For text generation/refinement
+            v.literal("generating_segments"),
             v.literal("completed"),
             v.literal("error")
         ),
         isVertical: v.optional(v.boolean()),
-    }).index("by_user", ["userId"]),
+        context: v.optional(v.string()),
+        pendingSegments: v.optional(v.number()), // <-- The counter field
+        errorMessage: v.optional(v.string()),   // Optional but recommended for error details
+    })
+        .index("by_userId", ["userId"])
+        .index("by_userId_status", ["userId", "status"]), // Example index
+    segments: defineTable({
+        storyId: v.id("story"),
+        text: v.string(),
+        order: v.number(),
+        isGenerating: v.boolean(),
+        image: v.optional(v.id("_storage")),
+        previewImage: v.optional(v.id("_storage")),
+        prompt: v.optional(v.string()),
+        error: v.optional(v.string()),
+    })
+        .index("by_storyId", ["storyId"]) // Index needed for the final check
+        .index("by_story_order", ["storyId", "order"]),
 });
