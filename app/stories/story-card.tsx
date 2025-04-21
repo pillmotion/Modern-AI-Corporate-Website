@@ -12,24 +12,17 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-    DialogFooter,
-    DialogClose,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { MoreVertical, ImageIcon, Loader2, AlertCircle, Trash, Wand2, Pencil, Save, Sparkles } from "lucide-react";
-import { Spinner } from "@/components/spinner";
+import { MoreVertical, ImageIcon, AlertCircle, Trash, Wand2, Pencil } from "lucide-react"; // Remove Loader2 if only used in old dialog's spinner
+import { Spinner } from "@/components/spinner"; // Keep for other spinners
 import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
+import { CREDIT_COSTS } from "@/convex/constants";
+import { EditPromptDialog } from "./edit-prompt-dialog";
+import { DeleteSegmentDialog } from "./delete-segment-dialog";
 
 interface StoryCardProps {
     segment: Doc<"segments">;
@@ -37,110 +30,6 @@ interface StoryCardProps {
     isVertical: boolean;
     characterLimit?: number;
     className?: string;
-}
-
-// Simple Prompt Editor Dialog Component (can be moved to a separate file)
-function EditPromptDialog({
-    isOpen,
-    onOpenChange,
-    segmentId,
-    initialPrompt,
-}: {
-    isOpen: boolean;
-    onOpenChange: (open: boolean) => void;
-    segmentId: Id<"segments">;
-    initialPrompt: string | null | undefined;
-}) {
-    const { t } = useTranslation();
-    const { toast } = useToast();
-    const [editedPrompt, setEditedPrompt] = useState(initialPrompt ?? "");
-    const [isSaving, setIsSaving] = useState(false);
-    const [isRegenerating, setIsRegenerating] = useState(false);
-    const [isPending, startTransition] = useTransition();
-
-    const savePrompt = useMutation(api.segments.savePrompt);
-    const regenerateImageMutation = useMutation(api.segments.regenerateImage);
-
-    useEffect(() => {
-        setEditedPrompt(initialPrompt ?? "");
-    }, [initialPrompt]);
-
-    const handleSave = async () => {
-        if (editedPrompt.trim() === (initialPrompt ?? "").trim()) {
-            toast({ title: t('noChangesDetected') });
-            return;
-        }
-        setIsSaving(true);
-        try {
-            await savePrompt({ segmentId, prompt: editedPrompt });
-            toast({ title: t('promptSaved') });
-            onOpenChange(false);
-        } catch (error) {
-            toast({ title: t('error'), description: error instanceof Error ? error.message : t('savePromptFailed'), variant: "destructive" });
-        } finally {
-            setIsSaving(false);
-        }
-    };
-
-    const handleSaveAndRegenerate = () => {
-        startTransition(async () => {
-            setIsRegenerating(true);
-            let promptWasSaved = false;
-            try {
-                if (editedPrompt.trim() !== (initialPrompt ?? "").trim()) {
-                    await savePrompt({ segmentId, prompt: editedPrompt });
-                    toast({ title: t('promptSaved') });
-                    promptWasSaved = true;
-                }
-                await regenerateImageMutation({ segmentId });
-                toast({ title: t('imageRegenerationStarted') });
-                onOpenChange(false);
-            } catch (error) {
-                if (!(promptWasSaved && error instanceof Error && error.message.includes('regenerate'))) {
-                    toast({ title: t('error'), description: error instanceof Error ? error.message : t('regenerationFailed'), variant: "destructive" });
-                }
-            } finally {
-                setIsRegenerating(false);
-            }
-        });
-    };
-
-    const isProcessing = isSaving || isRegenerating || isPending;
-
-    return (
-        <Dialog open={isOpen} onOpenChange={(open) => !isProcessing && onOpenChange(open)}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>{t('editImagePrompt')}</DialogTitle>
-                    <DialogDescription>{t('editPromptDescription')}</DialogDescription>
-                </DialogHeader>
-                <div className="py-4 space-y-2">
-                    <Label htmlFor="prompt">{t('prompt')}</Label>
-                    <Textarea
-                        id="prompt"
-                        value={editedPrompt}
-                        onChange={(e) => setEditedPrompt(e.target.value)}
-                        className="min-h-[100px] resize-y"
-                        disabled={isProcessing}
-                        placeholder={t('enterPrompt')}
-                    />
-                </div>
-                <DialogFooter className="gap-2 sm:gap-0">
-                    <DialogClose asChild>
-                        <Button type="button" variant="secondary" disabled={isProcessing}>{t('cancel')}</Button>
-                    </DialogClose>
-                    <Button onClick={handleSave} disabled={isProcessing || editedPrompt.trim() === (initialPrompt ?? "").trim()}>
-                        {isSaving ? <Spinner className="mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
-                        {t('savePrompt')}
-                    </Button>
-                    <Button onClick={handleSaveAndRegenerate} disabled={isProcessing}>
-                        {isRegenerating || isPending ? <Spinner className="mr-2 h-4 w-4" /> : <Wand2 className="mr-2 h-4 w-4" />}
-                        {t('saveAndRegenerate')}
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
 }
 
 export function StoryCard({
@@ -154,6 +43,7 @@ export function StoryCard({
     const { toast } = useToast();
     const [isActionPending, startActionTransition] = useTransition();
     const [isPromptDialogOpen, setIsPromptDialogOpen] = useState(false);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const updateSegmentText = useMutation(api.segments.updateSegmentText);
     const latestSegmentRef = useRef(segment);
     const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -164,12 +54,14 @@ export function StoryCard({
     const [justRefined, setJustRefined] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-    const imageStorageId = segment.image ?? segment.previewImage;
+    const imageStorageId = useMemo(() => {
+        const id = segment.image ?? segment.previewImage ?? null;
+        console.log(`Segment ${segment._id}: useMemo calculated ID: ${id}`);
+        return id;
+    }, [segment.image, segment.previewImage]);
     const imageUrl = useQuery(
         api.segments.getImageUrl,
-        imageStorageId
-            ? { storageId: imageStorageId, segmentId: segment._id }
-            : "skip"
+        imageStorageId ? { storageId: imageStorageId, segmentId: segment._id } : "skip"
     );
     const generateImage = useMutation(api.segments.generateImage);
     const deleteSegmentMutation = useMutation(api.segments.deleteSegment);
@@ -319,17 +211,17 @@ export function StoryCard({
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={handleRefineText} disabled={isBusy || !currentText.trim()}>
-                                <Sparkles className="mr-2 h-4 w-4" />
-                                <span>{t('refineText')}</span>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                <span>{t('refineText')} ({CREDIT_COSTS.CHAT_COMPLETION} {t('credits')})</span>
                             </DropdownMenuItem>
                             {segment.image && (
                                 <>
                                     <DropdownMenuItem onClick={handleRegenerateImage} disabled={isBusy}>
                                         <Wand2 className="mr-2 h-4 w-4" />
-                                        <span>{t('regenerateImage')}</span>
+                                        <span>{t('regenerateImage')} ({CREDIT_COSTS.IMAGE_GENERATION} {t('credits')})</span>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => setIsPromptDialogOpen(true)} disabled={isBusy}>
-                                        <Pencil className="mr-2 h-4 w-4" />
+                                        <ImageIcon className="mr-2 h-4 w-4" />
                                         <span>{t('changePrompt')}</span>
                                     </DropdownMenuItem>
                                 </>
@@ -341,7 +233,11 @@ export function StoryCard({
                                 </DropdownMenuItem>
                             )}
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={handleDeleteSegment} disabled={isBusy} className="text-red-600 focus:text-red-600 focus:bg-red-50">
+                            <DropdownMenuItem
+                                onClick={() => setIsDeleteDialogOpen(true)} // Open the dialog
+                                disabled={isBusy}
+                                className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                            >
                                 <Trash className="mr-2 h-4 w-4" />
                                 <span>{t('deleteSegment')}</span>
                             </DropdownMenuItem>
@@ -387,7 +283,7 @@ export function StoryCard({
                             <p className="text-sm text-muted-foreground mb-3">{t('noImageGenerated')}</p>
                             <Button variant="secondary" onClick={handleGenerateImage} disabled={!currentText.trim() || isBusy}>
                                 <Wand2 className="mr-2 h-4 w-4" />
-                                {t('generateImage')}
+                                {t('generateImage')} ({CREDIT_COSTS.IMAGE_GENERATION} {t('credits')})
                             </Button>
                         </div>
                     )}
@@ -430,18 +326,18 @@ export function StoryCard({
                 />
             )}
             {isPromptDialogOpen && !fullSegment && (
-                <Dialog open={isPromptDialogOpen} onOpenChange={setIsPromptDialogOpen}>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle className="sr-only">{t('loadingPromptData')}</DialogTitle>
-                        </DialogHeader>
-                        <div className="flex items-center justify-center p-8">
-                            <Spinner />
-                            <span className="ml-2">{t('loading')}</span>
-                        </div>
-                    </DialogContent>
-                </Dialog>
+                // Simplified loading indicator or reuse the Dialog structure with Spinner
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+                    <Spinner />
+                </div>
             )}
+
+            <DeleteSegmentDialog
+                isOpen={isDeleteDialogOpen}
+                onOpenChange={setIsDeleteDialogOpen}
+                segmentId={segment._id}
+                segmentOrder={segment.order} // Pass order for display
+            />
         </>
     );
 }

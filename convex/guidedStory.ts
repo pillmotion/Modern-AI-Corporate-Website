@@ -292,7 +292,7 @@ export const generateSegmentsAction = internalAction({
                 });
                 return;
             }
-            await ctx.runMutation(internal.story.updateStoryContext, {
+            await ctx.runMutation(internal.story.updateStoryContextInternal, {
                 storyId: args.storyId,
                 context,
             });
@@ -351,7 +351,7 @@ export const generateSegmentsAction = internalAction({
     }
 });
 
-async function generateContext(script: string): Promise<string | null> {
+export async function generateContext(script: string): Promise<string | null> {
     if (!script || !script.trim()) {
         console.warn("generateContext called with empty script.");
         return null;
@@ -365,7 +365,7 @@ async function generateContext(script: string): Promise<string | null> {
         throw new Error("OpenAI API key not set in environment variables.");
     }
 
-    const systemPrompt = `You are an AI assistant specialized in summarizing texts. Read the following story script and provide a concise summary (1-2 sentences) capturing the main theme, characters, and setting. This summary will be used as context for generating consistent images for different parts of the story. Focus on visual elements and overall mood. Output ONLY the summary text.`;
+    const systemPrompt = `You are an AI assistant specialized in summarizing texts. Read the following story script. Detect the language of the input story script. Provide a concise summary (1-2 sentences) capturing the main theme, characters, and setting **in the same language as the input script**. This summary will be used as context for generating consistent images for different parts of the story. Focus on visual elements and overall mood. Output ONLY the summary text in the detected language.`;
 
     try {
         const response = await openai.chat.completions.create({

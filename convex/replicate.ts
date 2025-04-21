@@ -76,6 +76,7 @@ export const regenerateSegmentImageUsingPrompt = internalAction({
             if (!url) throw new Error("Replicate did not return URL");
 
             const response = await fetch(url);
+            if (!response.ok) throw new Error(`Failed to fetch image from Replicate: ${response.statusText}`);
             const blob = await response.blob();
 
             const arrayBuffer = await blob.arrayBuffer();
@@ -119,13 +120,18 @@ export const regenerateSegmentImageUsingPrompt = internalAction({
         } finally {
             if (storyId) {
                 try {
-                    console.log(`Calling decrement for story ${storyId} (segment ${args.segmentId})`);
-                    await ctx.runMutation(internal.story.decrementPendingSegmentsAndFinalize, { storyId });
+                    const currentStory = await ctx.runQuery(internal.story.getStoryInternal, { storyId });
+                    if (currentStory && currentStory.status === 'generating_segments') {
+                        console.log(`Calling decrement for story ${storyId} (segment ${args.segmentId}) because status is generating_segments`);
+                        await ctx.runMutation(internal.story.decrementPendingSegmentsAndFinalize, { storyId });
+                    } else {
+                        console.log(`Skipping decrement for story ${storyId} (segment ${args.segmentId}) because status is ${currentStory?.status}`);
+                    }
                 } catch (decrementError) {
-                    console.error(`CRITICAL: Failed to decrement counter for story ${storyId}:`, decrementError);
+                    console.error(`CRITICAL: Failed to query story or run decrement for story ${storyId}:`, decrementError);
                 }
             } else {
-                console.warn(`Cannot decrement: storyId missing for segment ${args.segmentId}.`);
+                console.warn(`Cannot decrement: storyId was missing for segment ${args.segmentId}. Check earlier errors.`);
             }
         }
     },

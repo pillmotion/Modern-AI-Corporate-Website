@@ -1,7 +1,11 @@
 import { Doc, Id } from "./_generated/dataModel";
-import { authQuery } from "./util";
+import { authMutation, authQuery } from "./util";
 import { ConvexError, v } from "convex/values";
-import { QueryCtx, MutationCtx, internalQuery, internalMutation } from "./_generated/server";
+import { QueryCtx, MutationCtx, internalQuery, internalMutation, internalAction } from "./_generated/server";
+import { consumeCreditsHelper } from "./credits";
+import { CREDIT_COSTS } from "./constants";
+import { generateContext } from "./guidedStory";
+import { internal } from "./_generated/api";
 
 export const getStory = authQuery({
     args: {
@@ -56,20 +60,94 @@ export async function verifyStoryOwnerHelper(
     return { story: story, userId: userId };
 }
 
-export const updateStoryContext = internalMutation({
+export const updateStoryContextInternal = internalMutation({
     args: {
         storyId: v.id("story"),
         context: v.string(),
     },
     handler: async (ctx, args) => {
         const { storyId, context } = args;
-
-        const existingStory = await ctx.db.get(storyId);
-        if (!existingStory) {
-            console.error(`Story not found with ID: ${storyId}. Cannot update context.`);
-            throw new Error(`Story not found: ${storyId}`);
+        try {
+            await ctx.db.patch(storyId, { context: context });
+            console.log(`Internal context updated for story ${storyId}`);
+        } catch (error) {
+            console.error(`Failed to update internal context for story ${storyId}:`, error);
+            throw new ConvexError("Failed to update story context internally.");
         }
-        await ctx.db.patch(storyId, { context: context });
+    },
+});
+
+export const updateUserStoryContext = authMutation({
+    args: {
+        storyId: v.id("story"),
+        context: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const { storyId, context } = args;
+        await verifyStoryOwnerHelper(ctx, storyId);
+        try {
+            await ctx.db.patch(storyId, { context: context });
+            console.log(`User updated context for story ${storyId}`);
+        } catch (dbError) {
+            console.error(`Failed to save user context for story ${storyId}:`, dbError);
+            throw new ConvexError("Database error saving context.");
+        }
+    },
+});
+
+export const regenerateStoryContext = authMutation({
+    args: {
+        storyId: v.id("story"),
+    },
+    handler: async (ctx, args) => {
+        const { storyId } = args;
+        const { story, userId } = await verifyStoryOwnerHelper(ctx, storyId);
+
+        if (!story.script || !story.script.trim()) {
+            throw new ConvexError("Cannot regenerate context for an empty story script.");
+        }
+
+        await consumeCreditsHelper(ctx, userId, CREDIT_COSTS.CHAT_COMPLETION);
+
+        await ctx.scheduler.runAfter(0, internal.story.regenerateStoryContextAction, {
+            storyId: storyId,
+            script: story.script,
+        });
+
+        console.log(`Scheduled context regeneration for story ${storyId}`);
+    },
+});
+
+export const regenerateStoryContextAction = internalAction({
+    args: {
+        storyId: v.id("story"),
+        script: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const { storyId, script } = args;
+
+        let newContext: string | null = null;
+        try {
+            newContext = await generateContext(script);
+
+            if (!newContext) {
+                console.warn(`Action: AI failed to regenerate context for story ${storyId}.`);
+                return;
+            }
+        } catch (error) {
+            console.error(`Action: Error calling generateContext for story ${storyId}:`, error);
+            throw new ConvexError(`Failed to regenerate context: ${error instanceof Error ? error.message : "AI service error"}`);
+        }
+
+        try {
+            await ctx.runMutation(internal.story.updateStoryContextInternal, {
+                storyId: storyId,
+                context: newContext,
+            });
+        } catch (dbError) {
+            console.error(`Action: Failed to save regenerated context for story ${storyId}:`, dbError);
+            throw new ConvexError("Database error saving regenerated context.");
+        }
     },
 });
 
@@ -82,7 +160,7 @@ export const initializeSegmentGeneration = internalMutation({
         await ctx.db.patch(args.storyId, {
             pendingSegments: args.segmentCount,
             status: "generating_segments",
-            errorMessage: undefined, // Clear previous errors
+            errorMessage: undefined,
         });
     },
 });
@@ -101,7 +179,6 @@ export const decrementPendingSegmentsAndFinalize = internalMutation({
 
         if (newCount === 0) {
             console.log(`All segments processed for story ${args.storyId}. Checking errors...`);
-            // Query segments for errors (OK in mutation)
             const segmentsWithError = await ctx.db
                 .query("segments")
                 .withIndex("by_storyId", (q) => q.eq("storyId", args.storyId))
