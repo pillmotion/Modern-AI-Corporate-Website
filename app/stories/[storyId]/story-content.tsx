@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/spinner";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -11,7 +11,7 @@ import { useParams } from "next/navigation";
 import { useMemo, useCallback, useTransition, useState } from "react";
 import { StoryCard } from "../story-card";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, AlertTriangle, Pencil } from "lucide-react";
+import { Plus, AlertTriangle, Pencil, Wand2, Sparkles, BookOpen, Copy, Video } from "lucide-react";
 import { EditImageContextDialog } from "./edit-image-context";
 
 export function StoryContent() {
@@ -20,6 +20,12 @@ export function StoryContent() {
     const { toast } = useToast();
     const [isAddingSegment, startAddTransition] = useTransition();
     const [isContextDialogOpen, setIsContextDialogOpen] = useState(false);
+
+    const [isReviewing, startReviewTransition] = useTransition();
+    const [isFixingGrammar, startFixGrammarTransition] = useTransition();
+    const [isReading, startReadTransition] = useTransition();
+    const [isCloning, startCloneTransition] = useTransition();
+    const [isGeneratingVideo, startGenerateVideoTransition] = useTransition();
 
     const storyResult = useQuery(api.story.getStory, storyId ? { storyId } : "skip");
     const titleResult = useQuery(api.story.getStoryTitle, storyId ? { storyId } : "skip"); // Fetch title separately or combine in getStory
@@ -57,6 +63,7 @@ export function StoryContent() {
 
     const isStoryLoading = storyResult === undefined || titleResult === undefined;
     const areSegmentsLoading = segmentsResult === undefined;
+    const isAnyGlobalActionPending = isReviewing || isFixingGrammar || isReading || isCloning || isGeneratingVideo;
 
     if (isStoryLoading) {
         return (
@@ -148,22 +155,76 @@ export function StoryContent() {
                                         segment={segment}
                                         storyId={storyId}
                                         isVertical={isVertical}
-                                        className="w-full h-full"
+                                        className="w-full" // h-full might not be needed if footer standardizes height
+                                        onAddSegmentAfter={handleAddSegmentAfter} // Pass handler
+                                        isAddingSegment={isAddingSegment}      // Pass loading state
                                     />
                                 ))}
                             </div>
                         )}
-
-                        {/* Add Segment Button (at the end) */}
-                        {!areSegmentsLoading && sortedSegments.length > 0 && (
-                            <div className="flex justify-center pt-4">
-                                <Button onClick={handleAddSegmentAtEnd} variant="outline" disabled={isAddingSegment}>
-                                    {isAddingSegment ? <Spinner className="mr-2 h-4 w-4" /> : <Plus className="mr-2 h-4 w-4" />}
-                                    {t('addSegment')}
-                                </Button>
-                            </div>
-                        )}
                     </div>
+                    {!isStoryLoading && !areSegmentsLoading && storyResult && segmentsResult && (
+                        <Card className="mt-8 backdrop-blur-sm bg-background/80 border-primary/10 shadow-lg">
+                            <CardContent className="p-4 sm:p-6"> {/* Reduced padding slightly */}
+                                {/* Use grid for better control on mobile, flex on larger screens */}
+                                <div className="grid grid-cols-2 sm:flex sm:flex-row sm:justify-center sm:items-center gap-3 sm:gap-4 flex-wrap">
+                                    {/* Review Story Button */}
+                                    <Button
+                                        variant="outline"
+                                        // onClick={handleReviewStory}
+                                        disabled={isAnyGlobalActionPending || isAddingSegment}
+                                        className="border-primary/30 hover:border-primary/50 hover:bg-primary/5 w-full sm:w-auto justify-start sm:justify-center text-left sm:text-center"
+                                    >
+                                        {isReviewing ? <Spinner size="sm" className="mr-2" /> : <Wand2 className="mr-2 h-4 w-4 flex-shrink-0" />}
+                                        <span className="truncate">{t('reviewStory')}</span>
+                                    </Button>
+
+                                    {/* Fix Grammar Button */}
+                                    <Button
+                                        variant="outline"
+                                        // onClick={handleFixGrammar}
+                                        disabled={isAnyGlobalActionPending || isAddingSegment}
+                                        className="border-primary/30 hover:border-primary/50 hover:bg-primary/5 w-full sm:w-auto justify-start sm:justify-center text-left sm:text-center"
+                                    >
+                                        {isFixingGrammar ? <Spinner size="sm" className="mr-2" /> : <Sparkles className="mr-2 h-4 w-4 flex-shrink-0" />}
+                                        <span className="truncate">{t('fixGrammar')}</span>
+                                    </Button>
+
+                                    {/* Read Full Story Button */}
+                                    <Button
+                                        variant="outline"
+                                        // onClick={handleReadFullStory}
+                                        disabled={isAnyGlobalActionPending || isAddingSegment}
+                                        className="border-primary/30 hover:border-primary/50 hover:bg-primary/5 w-full sm:w-auto justify-start sm:justify-center text-left sm:text-center"
+                                    >
+                                        {isReading ? <Spinner size="sm" className="mr-2" /> : <BookOpen className="mr-2 h-4 w-4 flex-shrink-0" />}
+                                        <span className="truncate">{t('readFullStory')}</span>
+                                    </Button>
+
+                                    {/* Clone Story Button */}
+                                    <Button
+                                        variant="outline"
+                                        // onClick={handleCloneStory}
+                                        disabled={isAnyGlobalActionPending || isAddingSegment}
+                                        className="border-primary/30 hover:border-primary/50 hover:bg-primary/5 w-full sm:w-auto justify-start sm:justify-center text-left sm:text-center"
+                                    >
+                                        {isCloning ? <Spinner size="sm" className="mr-2" /> : <Copy className="mr-2 h-4 w-4 flex-shrink-0" />}
+                                        <span className="truncate">{isVertical ? t('cloneToHorizontal') : t('cloneToVertical')}</span>
+                                    </Button>
+
+                                    {/* Generate Video Button - Spans 2 cols on mobile grid */}
+                                    <Button
+                                        // onClick={handleGenerateVideo}
+                                        disabled={isAnyGlobalActionPending || isAddingSegment || sortedSegments.length === 0}
+                                        className="bg-primary hover:bg-primary/90 w-full sm:w-auto justify-center col-span-2 sm:col-span-1" // Span 2 cols on mobile
+                                    >
+                                        {isGeneratingVideo ? <Spinner size="sm" className="mr-2" /> : <Video className="mr-2 h-4 w-4 flex-shrink-0" />}
+                                        {t('generateVideo')}
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
                 </main>
             </div>
 

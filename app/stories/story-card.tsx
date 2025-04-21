@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useCallback, useEffect, useRef, useTransition } from "react";
 import Image from "next/image";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -13,8 +13,8 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import { MoreVertical, ImageIcon, AlertCircle, Trash, Wand2, Pencil } from "lucide-react"; // Remove Loader2 if only used in old dialog's spinner
-import { Spinner } from "@/components/spinner"; // Keep for other spinners
+import { MoreVertical, ImageIcon, AlertCircle, Trash, Wand2, Pencil, Sparkles, Plus } from "lucide-react";
+import { Spinner } from "@/components/spinner";
 import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
@@ -30,6 +30,9 @@ interface StoryCardProps {
     isVertical: boolean;
     characterLimit?: number;
     className?: string;
+    // --- Add the callback and loading state props ---
+    onAddSegmentAfter: (order: number) => void;
+    isAddingSegment: boolean;
 }
 
 export function StoryCard({
@@ -38,6 +41,8 @@ export function StoryCard({
     isVertical,
     characterLimit = 750,
     className,
+    onAddSegmentAfter, // Destructure prop
+    isAddingSegment,  // Destructure prop
 }: StoryCardProps) {
     const { t } = useTranslation();
     const { toast } = useToast();
@@ -198,14 +203,14 @@ export function StoryCard({
         <>
             <Card className={cn("flex flex-col w-full max-w-sm border-primary/10 shadow-md rounded-lg overflow-hidden bg-background/80 transition-shadow hover:shadow-lg", className)}>
                 {/* Header */}
-                <div className="flex justify-between items-center p-3 bg-muted/30 border-b border-primary/10">
+                <CardHeader className="flex flex-row justify-between items-center p-3 bg-muted/30 border-b border-primary/10">
                     <span className="text-sm font-medium text-muted-foreground">
                         {t('segment')} {segment.order + 1}
                     </span>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-7 w-7" disabled={isBusy}>
-                                {isActionPending ? <Spinner className="h-4 w-4 animate-spin" /> : <MoreVertical className="h-4 w-4" />}
+                                {isActionPending ? <Spinner size="sm" /> : <MoreVertical className="h-4 w-4" />}
                                 <span className="sr-only">{t('options')}</span>
                             </Button>
                         </DropdownMenuTrigger>
@@ -243,52 +248,60 @@ export function StoryCard({
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
-                </div>
+                </CardHeader>
 
                 {/* Image Area */}
-                <div className={cn(
-                    "relative bg-muted/50 w-full overflow-hidden group",
-                    isVertical ? "aspect-[9/16]" : "aspect-[16/9]"
-                )}>
-                    {segment.isGenerating && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-10">
-                            <div className="flex flex-col items-center gap-2 text-white">
-                                <Spinner className="h-8 w-8 animate-spin" />
-                                <span className="text-xs font-medium">{t('generatingImage')}...</span>
+                <CardContent className="p-0">
+                    <div className={cn(
+                        "relative bg-muted/50 w-full overflow-hidden group",
+                        isVertical ? "aspect-[9/16]" : "aspect-[16/9]"
+                    )}>
+                        {segment.isGenerating && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-10">
+                                <div className="flex flex-col items-center gap-2 text-white">
+                                    <Spinner className="h-8 w-8 animate-spin" />
+                                    <span className="text-xs font-medium">{t('generatingImage')}...</span>
+                                </div>
                             </div>
-                        </div>
-                    )}
-                    {segment.error && !segment.isGenerating && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-destructive/30 p-2 z-10 backdrop-blur-sm text-center">
-                            <AlertCircle className="h-6 w-6 text-destructive-foreground mb-1" />
-                            {/* Simplified error message */}
-                            <p className="text-xs text-destructive-foreground font-medium">{t('imageErrorOccurred')}</p>
-                            {/* Optionally show retry button based on error type? */}
-                        </div>
-                    )}
-                    {imageUrl && !segment.isGenerating && !segment.error && (
-                        <Image
-                            src={imageUrl}
-                            alt={`${t('segment')} ${segment.order + 1} image`}
-                            fill
-                            className="object-cover transition-transform duration-300 group-hover:scale-105"
-                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                            priority={segment.order < 3}
-                            unoptimized={!imageUrl.startsWith('/')}
-                        />
-                    )}
-                    {!imageUrl && !segment.isGenerating && !segment.error && (
-                        <div className="h-full w-full flex flex-col items-center justify-center bg-gradient-to-br from-muted/40 to-muted/60 p-4 text-center">
-                            <ImageIcon className="h-10 w-10 text-muted-foreground/50 mb-2" />
-                            <p className="text-sm text-muted-foreground mb-3">{t('noImageGenerated')}</p>
-                            <Button variant="secondary" onClick={handleGenerateImage} disabled={!currentText.trim() || isBusy}>
-                                <Wand2 className="mr-2 h-4 w-4" />
-                                {t('generateImage')} ({CREDIT_COSTS.IMAGE_GENERATION} {t('credits')})
-                            </Button>
-                        </div>
-                    )}
-                    {/* Removed the PlusCircle button */}
-                </div>
+                        )}
+                        {segment.error && !segment.isGenerating && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-destructive/30 p-2 z-10 backdrop-blur-sm text-center">
+                                <AlertCircle className="h-6 w-6 text-destructive-foreground mb-1" />
+                                {/* Simplified error message */}
+                                <p className="text-xs text-destructive-foreground font-medium">{t('imageErrorOccurred')}</p>
+                                {/* Optionally show retry button based on error type? */}
+                            </div>
+                        )}
+                        {imageUrl ? (
+                            <Image
+                                src={imageUrl}
+                                alt={t('imageAlt', { order: segment.order + 1 })}
+                                fill
+                                className="object-cover transition-transform duration-300 group-hover:scale-105"
+                                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                                priority={segment.order < 2} // Prioritize first few images
+                            />
+                        ) : segment.isGenerating ? (
+                            <div className="absolute inset-0 flex items-center justify-center bg-muted/80">
+                                <Spinner size="md" />
+                            </div>
+                        ) : (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted/30 p-4 text-center">
+                                <ImageIcon className="w-10 h-10 text-muted-foreground/50 mb-2" />
+                                <p className="text-xs text-muted-foreground">{t('noImage')}</p>
+                                <Button size="sm" variant="secondary" onClick={handleGenerateImage} disabled={isBusy || !currentText.trim()} className="mt-2">
+                                    {t('generateImage')}
+                                </Button>
+                            </div>
+                        )}
+                        {segment.error && (
+                            <div className="absolute bottom-0 left-0 right-0 bg-destructive/80 p-2 text-xs text-destructive-foreground flex items-center gap-1">
+                                <AlertCircle className="h-3 w-3" />
+                                <span>{segment.error}</span>
+                            </div>
+                        )}
+                    </div>
+                </CardContent>
 
                 {/* Text Area */}
                 <CardContent className="p-3 flex-grow flex flex-col bg-muted/10">
@@ -298,31 +311,47 @@ export function StoryCard({
                         onChange={handleTextChange}
                         readOnly={isTextareaReadOnly}
                         className={cn(
-                            "text-sm text-foreground flex-grow resize-none border-none focus-visible:ring-0",
-                            "shadow-none bg-transparent min-h-[100px] p-1",
-                            isTextareaReadOnly && "text-muted-foreground cursor-not-allowed",
-                            // Add class for visual feedback on refine
+                            "text-sm text-foreground flex-grow resize-none border-none focus-visible:ring-0", // Original classes
+                            "shadow-none bg-transparent min-h-[100px] p-1", // Original classes
+                            isTextareaReadOnly && "text-muted-foreground cursor-not-allowed", // Original classes
+                            // Add class for visual feedback on refine (Keep this enhancement if desired)
                             justRefined && "transition-colors duration-1000 bg-primary/10"
                         )}
                         maxLength={characterLimit}
-                        placeholder={t('writeSegmentText')}
+                        placeholder={t('writeSegmentText')} // Use the placeholder from the old code
                     />
                     <div className="text-right text-xs text-muted-foreground/70 mt-1 flex justify-end items-center h-4">
-                        {isSavingText && <Spinner className="h-3 w-3 mr-1 animate-spin" />}
+                        {isSavingText && <Spinner size="xs" className="h-3 w-3 mr-1 animate-spin" />} {/* Adjusted Spinner size */}
                         <span className={cn(charCount > characterLimit ? "text-destructive font-semibold" : "")}>
                             {charCount} / {characterLimit}
                         </span>
                     </div>
                 </CardContent>
+
+                <CardFooter className="p-2 border-t border-primary/10 bg-muted/20">
+                    <Button
+                        variant="ghost" // Subtle appearance
+                        size="sm"
+                        className="w-full text-muted-foreground hover:text-primary hover:bg-primary/10 justify-center" // Center content
+                        onClick={() => onAddSegmentAfter(segment.order)}
+                        disabled={isBusy} // Use the combined busy state from the top
+                    >
+                        {/* Show spinner only if THIS specific add is pending (isAddingSegment comes from parent) */}
+                        {isAddingSegment ? <Spinner size="sm" className="mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+                        {t('addSegmentAfter')}
+                    </Button>
+                </CardFooter>
             </Card>
 
             {/* Prompt Editing Dialog (Conditional Rendering) */}
             {isPromptDialogOpen && fullSegment && (
                 <EditPromptDialog
+                    // --- FIX: Pass segmentId ---
+                    segmentId={fullSegment._id}
+                    // --- FIX: Pass initialPrompt ---
+                    initialPrompt={fullSegment.prompt}
                     isOpen={isPromptDialogOpen}
                     onOpenChange={setIsPromptDialogOpen}
-                    segmentId={segment._id}
-                    initialPrompt={fullSegment.prompt}
                 />
             )}
             {isPromptDialogOpen && !fullSegment && (
