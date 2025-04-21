@@ -13,6 +13,18 @@ export const getStory = authQuery({
     },
 });
 
+export const getStoryTitle = authQuery({
+    args: {
+        storyId: v.id("story"),
+    },
+    handler: async (ctx, args): Promise<string | null> => {
+        // 尝试获取故事文档
+        const story = await ctx.db.get(args.storyId);
+
+        return story ? story.title : null;
+    },
+});
+
 export const getStoryInternal = internalQuery({
     args: { storyId: v.id("story") },
     async handler(ctx, args) {

@@ -36,27 +36,7 @@ import {
 } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input"
 import useMediaQuery from "@/hooks/use-media-query";
-import { analyzeTextAndEstimateDuration } from "@/lib/utils";
-
-// debounce function
-function debounce<T extends (...args: any[]) => any>(func: T, wait: number): { (...args: Parameters<T>): void; cancel: () => void; } {
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-
-    const debounced = (...args: Parameters<T>): void => {
-        if (timeoutId) clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => { func(...args); }, wait);
-    };
-
-    // Add a cancel method for cleanup
-    debounced.cancel = () => {
-        if (timeoutId) {
-            clearTimeout(timeoutId);
-            timeoutId = null;
-        }
-    };
-
-    return debounced;
-}
+import { analyzeTextAndEstimateDuration, debounce } from "@/lib/utils";
 
 export function RefineStoryContent() {
     const { t } = useTranslation();
@@ -348,7 +328,7 @@ export function RefineStoryContent() {
                                                             {t('orientationHorizontal')}
                                                         </Button>
                                                     </div>
-                                                    <p className="text-sm text-primary text-center mt-2">
+                                                    <p className="text-sm text-red-500 text-center mt-2">
                                                         {t('orientationChangeWarning')}
                                                     </p>
                                                 </div>
