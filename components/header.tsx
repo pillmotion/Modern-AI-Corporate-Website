@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetTitle, SheetContent, SheetHeader, SheetTrigger } from '@/components/ui/sheet';
 import { useTranslation } from '@/hooks/useTranslation';
 import { SignInButton, UserButton } from "@clerk/clerk-react";
 import Link from "next/link";
@@ -130,6 +130,11 @@ export default function Header() {
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[250px] sm:w-[300px]">
+              <SheetHeader>
+                <SheetTitle>
+                  <Logo className="mx-auto" hideText />
+                </SheetTitle>
+              </SheetHeader>
               <div className="flex flex-col gap-6 mt-6">
                 <a href="/" className="text-foreground/60 hover:text-primary transition-colors">
                   {t('home')}

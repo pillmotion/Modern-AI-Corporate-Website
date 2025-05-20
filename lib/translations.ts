@@ -150,7 +150,6 @@ export const translations = {
     errorLoadingSegments: 'Error loading segments',
     loadingSegments: 'Loading segments...',
     addFirstSegment: 'Add first segment',
-    addSegment: 'Add Segment',
     loadingPromptData: 'Loading prompt data...',
     editImageContext: 'Edit Image Context',
     saveContextSuccess: 'Context saved successfully',
@@ -188,6 +187,11 @@ export const translations = {
     login: 'Login',
     generate: 'Generate',
     back: 'Back',
+    Menu: 'Menu',
+    language: 'Language',
+    theme: 'Theme',
+    switchToDark: 'Switch to Dark Theme',
+    switchToLight: 'Switch to Light Theme',
 
     // 页脚
     footerDesc: 'AI platform for boundless creativity',
@@ -345,7 +349,6 @@ export const translations = {
     errorLoadingSegments: '加载片段失败',
     loadingSegments: '加载片段...',
     addFirstSegment: '添加第一个片段',
-    addSegment: '添加片段',
     loadingPromptData: '加载提示数据...',
     editImageContext: '编辑图像上下文',
     saveContextSuccess: '上下文保存成功',
@@ -364,7 +367,7 @@ export const translations = {
     deleteSegmentConfirmation: '确定要删除这个片段吗？',
     cannotBeUndone: '此操作无法撤销。',
     delete: '删除',
-    addSegmentAfter: '添加片段后',
+    addSegmentAfter: '在后面添加片段',
     reviewStory: '审阅故事',
     fixGrammar: '修正语法和拼写',
     readFullStory: '阅读完整故事',
@@ -383,6 +386,11 @@ export const translations = {
     login: '登录',
     generate: '生成',
     back: '返回',
+    Menu: '菜单',
+    language: '语言',
+    theme: '主题',
+    switchToDark: '切换到暗黑主题',
+    switchToLight: '切换到亮白主题',
 
     // 页脚
     footerDesc: '让创意自由流动',

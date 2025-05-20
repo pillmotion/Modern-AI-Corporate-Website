@@ -11,6 +11,7 @@ import { Toaster } from "@/components/ui/toaster";
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   title: 'Pillmotion - Leading AI Innovation and Development',
   description: 'Transform your business with cutting-edge AI solutions. Join us in shaping the future of technology.',
   icons: {
